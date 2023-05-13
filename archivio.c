@@ -98,10 +98,40 @@ int conta(char *s)
     }
 }
 
+typedef struct{
+    char *nomePipe;
+    int *nthread;
+    char *buffer;
+}argCapi;
+
+void *gestioneScrittori(void *arg){
+    
+}
+
+void *gestioneLettori(void *arg){
+
+}
+
 int main(int argc, char *argv[])
 {
-    int scrittori = atoi(argv[1]);
-    int lettori = atoi(argv[2]);
+    int w = atoi(argv[1]);
+    int r = atoi(argv[2]);
+    char bufferS[PC_buffer_len];
+    char bufferL[PC_buffer_len];
+    argCapi a[2]; // 0->CapoScrittori, 1->CapoLettori
+
+    pthread_t scrittori[w];
+    pthread_t lettori[w];
+    pthread_t capoS; // capo Scrittore
+    pthread_t capoL; // capo Lettore
+
+    a[0].nomePipe = "caposc";
+    a[0].buffer = &bufferS;
+    a[0].nthread = &w;
+    a[1].nomePipe = "capolet";
+    a[1].buffer = &bufferL;
+    a[1].nthread = &r;
+
     int ht = hcreate(Num_elem);
     if (ht == 0)
     {
@@ -111,16 +141,8 @@ int main(int argc, char *argv[])
     // TODO:thread gestore segnali
 
     // TODO: thread caposcrittore
-    for (int i = 0; i < scrittori; i++)
-    {
-        // TODO: thread scrittori -> aggiungi
-    }
-
-    // TODO: thread capolettore
-    for (int i = 0; i < lettori; i++)
-    {
-        // TODO: thread lettori -> conta
-    }
+    pthread_create(&capoS,NULL,&gestioneScrittori,&a[0]);
+    pthread_create(&capoL,NULL,&gestioneLettori,&a[1]);
     return 0;
 }
 
