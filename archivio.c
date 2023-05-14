@@ -17,6 +17,7 @@
 
 int lenhash = 0;
 ENTRY *testa = NULL;
+int *ht;
 
 void termina(const char *messaggio)
 {
@@ -98,18 +99,19 @@ int conta(char *s)
     }
 }
 
-typedef struct{
+typedef struct
+{
     char *nomePipe;
     int *nthread;
     char *buffer;
-}argCapi;
+} argCapi;
 
-void *gestioneScrittori(void *arg){
-    
+void *gestioneScrittori(void *arg)
+{
 }
 
-void *gestioneLettori(void *arg){
-
+void *gestioneLettori(void *arg)
+{
 }
 
 int main(int argc, char *argv[])
@@ -132,7 +134,7 @@ int main(int argc, char *argv[])
     a[1].buffer = &bufferL;
     a[1].nthread = &r;
 
-    int ht = hcreate(Num_elem);
+    ht = hcreate(Num_elem);
     if (ht == 0)
     {
         termina("errore hcreate");
@@ -141,8 +143,8 @@ int main(int argc, char *argv[])
     // TODO:thread gestore segnali
 
     // TODO: thread caposcrittore
-    pthread_create(&capoS,NULL,&gestioneScrittori,&a[0]);
-    pthread_create(&capoL,NULL,&gestioneLettori,&a[1]);
+    pthread_create(&capoS, NULL, &gestioneScrittori, &a[0]);
+    pthread_create(&capoL, NULL, &gestioneLettori, &a[1]);
     return 0;
 }
 
