@@ -28,8 +28,8 @@ void termina(const char *messaggio)
 }
 
 int contaLinee(const char *filename){
-    int lines = 0;
     char *line = NULL;
+    size_t lengthT = 0;
     size_t line_length = 0;
     ssize_t read;
     FILE *f = open(filename, "r");
@@ -43,7 +43,7 @@ int contaLinee(const char *filename){
     while ((read = getline(&line, &line_length, f)) != -1)
     {
         if(read <= MAX_SEQUENCE_LENGTH){
-            lines++;
+            lengthT+=line_length;
         }
     }
     free(line);
@@ -51,7 +51,7 @@ int contaLinee(const char *filename){
         termina("errore chiusura file (conteggio linee)\n");
     }
 
-    return lines;
+    return lengthT;
 
 }
 
@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
     int client_type = 0;
+    size_t lenfile = contaLinee(nfile);
     char *line = NULL;
     size_t line_length = 0;
     ssize_t read;
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
     }
 
     send(fd_sck, &client_type, sizeof(int), 0);
+
     while ((read = getline(&line, &line_length, file)) != -1)
     {
         assert(read <= MAX_SEQUENCE_LENGTH);

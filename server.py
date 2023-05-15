@@ -33,8 +33,9 @@ def gestione_connessione(conn,addr):
             data = recv_all(conn,2048)
             if len(data) == 0:
                 raise RuntimeError("errore connessione socket\n")
-            for i in range(len(data)):
-                line = struct.unpack(f"!{len(data[i])}s",data)[0]
+            line = struct.unpack(f"!{len(data)}s",data)[0]
+            with open("capolet","w") as fifoL:
+                fifoL.write(line)
         elif client_t == b'1': # client tipo B
             pass
 
