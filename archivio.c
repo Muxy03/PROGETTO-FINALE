@@ -102,16 +102,49 @@ int conta(char *s)
 typedef struct
 {
     char *nomePipe;
-    int *nthread;
     char *buffer;
 } argCapi;
 
 void *gestioneScrittori(void *arg)
 {
+    // TODO: suddividere lavoro ai thread mediante buffer
+    argCapi *a = (argCapi *)arg;
+    int fd = open(a->nomePipe, O_RDONLY);
+    if (fd == -1)
+    {
+        termina("errore apertura caposc\n");
+    }
+    ssize_t bytesRead;
+    while (bytesRead = read(fd, a->buffer, PC_buffer_len) > 0)
+    {
+      /*
+      Il thread "capo scrittore" legge il suo input da una FIFO (named pipe) caposc. 
+      L'input che riceve sono sequenze di byte, ognuna preceduta dalla sua lunghezza. 
+      Per ogni sequenza ricevuta il thread capo scrittore deve aggiungere in fondo un byte uguale a 0; 
+      successivamente deve effettuare una tokenizzazione utilizzando strtok (o forse strtok_r?) utilizzando ".,:; \n\r\t" come stringa di delimitatori. 
+      Una copia (ottenuta con strdup) di ogni token deve essere messo su un buffer produttori-consumatori per essere gestito dai thread scrittori (che svolgono il ruolo di consumatori)
+      */   
+    }
+    close(fd);
+    return NULL;
 }
 
 void *gestioneLettori(void *arg)
 {
+    // TODO: suddividere lavoro ai thread mediante buffer
+    argCapi *a = (argCapi *)arg;
+    int fd = open(a->nomePipe, O_RDONLY);
+    if (fd == -1)
+    {
+        termina("errore apertura capolet\n");
+    }
+    ssize_t bytesRead;
+    while (bytesRead = read(fd, a->buffer, PC_buffer_len) > 0)
+    {
+      
+    }
+    close(fd);
+    return NULL;
 }
 
 int main(int argc, char *argv[])
@@ -129,10 +162,8 @@ int main(int argc, char *argv[])
 
     a[0].nomePipe = "caposc";
     a[0].buffer = &bufferS;
-    a[0].nthread = &w;
     a[1].nomePipe = "capolet";
     a[1].buffer = &bufferL;
-    a[1].nthread = &r;
 
     ht = hcreate(Num_elem);
     if (ht == 0)
@@ -142,9 +173,9 @@ int main(int argc, char *argv[])
 
     // TODO:thread gestore segnali
 
-    // TODO: thread caposcrittore
     pthread_create(&capoS, NULL, &gestioneScrittori, &a[0]);
     pthread_create(&capoL, NULL, &gestioneLettori, &a[1]);
+
     return 0;
 }
 

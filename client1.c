@@ -27,34 +27,6 @@ void termina(const char *messaggio)
     exit(1);
 }
 
-int contaLinee(const char *filename){
-    char *line = NULL;
-    size_t lengthT = 0;
-    size_t line_length = 0;
-    ssize_t read;
-    FILE *f = open(filename, "r");
-
-    if (f == NULL)
-    {
-        termina("Impossibile aprire il file\n");
-    }
-
-
-    while ((read = getline(&line, &line_length, f)) != -1)
-    {
-        if(read <= MAX_SEQUENCE_LENGTH){
-            lengthT+=line_length;
-        }
-    }
-    free(line);
-    if(fclose(f) != EOF){
-        termina("errore chiusura file (conteggio linee)\n");
-    }
-
-    return lengthT;
-
-}
-
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -69,7 +41,6 @@ int main(int argc, char *argv[])
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
     int client_type = 0;
-    size_t lenfile = contaLinee(nfile);
     char *line = NULL;
     size_t line_length = 0;
     ssize_t read;
@@ -80,30 +51,32 @@ int main(int argc, char *argv[])
         termina("Impossibile aprire il file\n");
     }
 
-    if ((fd_sck = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        termina("Errore creazione socket\n");
-    }
-
-    if (connect(fd_sck, &serv_addr, sizeof(serv_addr)) < 0)
-    {
-        termina("Errore apertura connessione\n");
-    }
-
-    send(fd_sck, &client_type, sizeof(int), 0);
-
     while ((read = getline(&line, &line_length, file)) != -1)
     {
         assert(read <= MAX_SEQUENCE_LENGTH);
+        
+        if ((fd_sck = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            termina("Errore creazione socket\n");
+        }
+        
+        if (connect(fd_sck, &serv_addr, sizeof(serv_addr)) < 0)
+        {
+            termina("Errore apertura connessione\n");
+        }
+
+        send(fd_sck, &client_type, sizeof(int), 0);
+        
         send(fd_sck, &line, line_length, 0);
+
+        if (close(fd_sck) < 0)
+        {
+            termina("Errore chiusura socket\n");
+        }
     }
 
     free(line);
     fclose(file);
-    if (close(fd_sck) < 0)
-    {
-        termina("Errore chiusura socket\n");
-    }
 
     return 0;
 }

@@ -29,15 +29,25 @@ def main(host=HOST,port=PORT):
 def gestione_connessione(conn,addr):
     with conn:
         client_t = conn.recv(1)
-        if client_t == b'0': # client tipo A
+        if client_t == b'0': # client connessione tipo A
             data = recv_all(conn,2048)
             if len(data) == 0:
                 raise RuntimeError("errore connessione socket\n")
             line = struct.unpack(f"!{len(data)}s",data)[0]
             with open("capolet","w") as fifoL:
                 fifoL.write(line)
-        elif client_t == b'1': # client tipo B
-            pass
+        elif client_t == b'1': # client connessione tipo B
+            nLineTot  = 0
+            while True:
+                lenLine = recv_all(conn,2048)
+                if len(lenLine) == 0:
+                    break
+                nLineTot += 1
+                data = conn.recv(lenLine)
+                line = struct.unpack(f"!{int(lenLine)}s",data)[0]
+                with open("caposc","w") as fifoS:
+                    fifoS.write(line)
+            conn.sendall(struct.pack("!i",nLineTot))
 
 def recv_all(conn,n):
   chunks = b''
