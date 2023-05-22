@@ -221,6 +221,7 @@ void *capoScrittori(void *arg)
     //     pthread_create(&t[i], NULL, Scrittori, &b[i]);
     // }
 
+
     if (read(fd, &len, sizeof(int)) != sizeof(int))
     {
         termina("errore read");
