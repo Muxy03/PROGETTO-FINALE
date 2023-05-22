@@ -20,6 +20,8 @@
 typedef struct
 {
     char *nomefile;
+    pthread_mutex_t *mutex;
+    int *fd;
 } args;
 
 void termina(const char *messaggio)
@@ -37,55 +39,80 @@ void termina(const char *messaggio)
 
 void *Thread(void *arg)
 {
+    printf("THREAD PARTITO\n");
     args *a = (args *)arg;
-    FILE *f = fopen(a->nomefile, O_RDONLY);
-    char *line = "vuoto";
-    ssize_t e;
+    FILE *f = fopen(a->nomefile, "r");
+    if (f == NULL)
+    {
+        termina("ERRORE APERTURA PIPE");
+    }
+    char *line = NULL;
+    size_t len=0;
+    ssize_t e,letta;
     int tmp;
     char stop[1];
-    
-    int fd_skt = 0;
+
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
-    if ((fd_skt = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if ((*(a->fd) = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         termina("Errore creazione socket");
     }
 
-    if (connect(fd_skt, &serv_addr, sizeof(serv_addr)) < 0)
+    printf("creato socket\n");
+
+    if (connect(*(a->fd), &serv_addr, sizeof(serv_addr)) < 0)
     {
         termina("Errore apertura connessione");
     }
+    printf("aperta connessione\n");
 
-    e = write(fd_skt, typec, strlen(typec));
-    
-    if(e < 0){
+    pthread_mutex_lock(a->mutex);
+    e = write(*(a->fd), typec, strlen(typec));
+    pthread_mutex_unlock(a->mutex);
+
+    if (e < 0)
+    {
         termina("Errore scrittura su socket");
     }
 
-    while (fgets(line,strlen(line),f) != NULL)
+    printf("scritto tipo connessione %s\n", typec);
+
+    pthread_mutex_lock(a->mutex);
+    while ((letta = getline(&line, &len, f)) != -1)
     {
         if (strlen(line) <= Max_sequence_length)
         {
-            // send(fd_skt, line, strlen(line), 0);
-            e = write(fd_skt, line, strlen(line));
+            //send(fd_skt, line, strlen(line), 0);
+            e = write(*(a->fd), line, strlen(line));
         }
-        //free(line);
     };
+    free(line);
+    pthread_mutex_unlock(a->mutex);
 
-    e = write(fd_skt, stop, 0);
+    pthread_mutex_lock(a->mutex);
+    e = write(*(a->fd), stop, 0);
+    printf("scritto stop di lunghezza %ld\n", strlen(stop));
+    pthread_mutex_unlock(a->mutex);
 
-    e = read(fd_skt, &tmp, sizeof(int));
+
+    pthread_mutex_lock(a->mutex);
+    e = recv(*(a->fd),&tmp,sizeof(int),0);
+    printf("letto tmp %d\n", tmp);
+    printf("%ld\n", e);
     assert(e == sizeof(int));
     printf("Numero di parole: %d\n", ntohl(tmp));
+    pthread_mutex_unlock(a->mutex);
 
-    if (close(fd_skt) < 0)
+    if (close(*(a->fd)) < 0)
     {
         termina("Errore chiusura socket");
     }
+    printf("chiusa connessione\n");
+    printf("THREAD FINITO\n");
     return NULL;
 }
 
@@ -98,18 +125,22 @@ int main(int argc, char *argv[])
         return 1;
     }
     int nthread = argc - 1;
+    int fd = 0;
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_t t[nthread];
     args files[nthread];
 
     for (int i = 0; i < nthread; i++)
     {
-        files[i].nomefile = argv[nthread - (i+1)];
+        files[i].nomefile = argv[i + 1];
+        files[i].mutex = &mutex;
+        files[i].fd = &fd;
         pthread_create(&t[i], NULL, &Thread, &files[i]);
     }
 
     for (int i = 0; i < nthread; i++)
     {
-       pthread_join(t[i], NULL);
+        pthread_join(t[i], NULL);
     }
 
     return 0;

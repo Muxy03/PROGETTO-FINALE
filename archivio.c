@@ -138,6 +138,7 @@ int conta(char *s)
 
 void *Scrittori(void *arg)
 {
+    printf("sono uno scrittore\n");
     argT *a = (argT *)arg;
 
     while (*(a->index) > 0)
@@ -163,8 +164,13 @@ void *Scrittori(void *arg)
 
 void *Lettori(void *arg)
 {
+    printf("sono un lettore\n");
     argT *a = (argT *)arg;
     FILE *f = fopen("lettori.log", "a");
+    if (f == NULL)
+    {
+        termina("errore apertura lettore.log");
+    }
 
     while (*(a->index) > 0)
     {
@@ -189,26 +195,31 @@ void *Lettori(void *arg)
 
 void *capoScrittori(void *arg)
 {
+    printf("sono il capo scrittori\n");
     argCapi *a = (argCapi *)arg;
     int fd = open(a->fifo, O_RDONLY);
+    if (fd == -1)
+    {
+        termina("errore apertura fifo");
+    }
     int len, index = 0;
     char buffer[Max_sequence_length];
     char *saveptr;
 
     pthread_t t[*(a->nthread)];
     argT b[*(a->nthread)];
-
-    for (int i = 0; i < *(a->nthread); i++)
-    {
-        b[i].index = &index;
-        b[i].buffer = a->buffer;
-        b[i].mutex = a->mutex;
-        b[i].full = a->full;
-        b[i].empty = a->empty;
-        b[i].hashmutex = a->hashmutex;
-        b[i].hash = a->hash;
-        pthread_create(&t[i], NULL, Scrittori, &b[i]);
-    }
+    printf("creo i scrittori\n");
+    // for (int i = 0; i < *(a->nthread); i++)
+    // {
+    //     b[i].index = &index;
+    //     b[i].buffer = a->buffer;
+    //     b[i].mutex = a->mutex;
+    //     b[i].full = a->full;
+    //     b[i].empty = a->empty;
+    //     b[i].hashmutex = a->hashmutex;
+    //     b[i].hash = a->hash;
+    //     pthread_create(&t[i], NULL, Scrittori, &b[i]);
+    // }
 
     if (read(fd, &len, sizeof(int)) != sizeof(int))
     {
@@ -259,8 +270,13 @@ void *capoScrittori(void *arg)
 
 void *capoLettori(void *arg)
 {
+    printf("sono il capo lettori\n");
     argCapi *a = (argCapi *)arg;
     int fd = open(a->fifo, O_RDONLY);
+    if (fd == -1)
+    {
+        termina("errore apertura fifo");
+    }
     int len, index = 0;
     char buffer[Max_sequence_length];
     char *saveptr;
@@ -268,6 +284,7 @@ void *capoLettori(void *arg)
     pthread_t t[*(a->nthread)];
     argT b[*(a->nthread)];
 
+    printf("creo i lettori\n");
     for (int i = 0; i < *(a->nthread); i++)
     {
         b[i].index = &index;
@@ -329,6 +346,7 @@ void *capoLettori(void *arg)
 
 void *sigHandler(void *arg)
 {
+    printf("sono il sigHandler\n");
     argSig *a = (argSig *)arg;
     sigset_t set;
     sigemptyset(&set);
@@ -352,6 +370,7 @@ void *sigHandler(void *arg)
         }
         if (s == SIGTERM)
         {
+            printf("sono in sigterm\n");
             *(a->continua) = false;
             pthread_join(*(a->CS), NULL);
             pthread_join(*(a->CL), NULL);
@@ -459,6 +478,8 @@ int main(int argc, char *argv[])
     pthread_create(&sigH, NULL, &sigHandler, &arg);
 
     pthread_join(sigH, NULL);
+
+    printf("termino\n");
 
     return 0;
 }

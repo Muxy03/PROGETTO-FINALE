@@ -38,10 +38,10 @@ int main(int argc, char *argv[])
 
     char *line;
     size_t len;
-    ssize_t e, read;
-    FILE *f = fopen(argv[1], O_RDONLY);
+    ssize_t e;
+    FILE *f = fopen(argv[1], "r");
 
-    while ((read = getline(&line, &len, f)) > 0)
+    while (getline(&line, &len, f) > 0)
     {
         int fd_skt = 0;
         struct sockaddr_in serv_addr;
@@ -54,12 +54,18 @@ int main(int argc, char *argv[])
             termina("Errore creazione socket");
         }
 
+        printf("creato socket\n");
+
         if (connect(fd_skt, &serv_addr, sizeof(serv_addr)) < 0)
         {
             termina("Errore apertura connessione");
         }
 
+        printf("aperta connessione\n");
+
         e = write(fd_skt, typec, strlen(typec));
+
+        printf("scritto tipo\n");
 
         if (e < 0)
         {
@@ -68,6 +74,7 @@ int main(int argc, char *argv[])
 
         if (strlen(line) <= Max_sequence_length)
         {
+            printf("scritto linea:%s\n", line);
             e = write(fd_skt, line, strlen(line));
             
             if (e < 0)
@@ -80,6 +87,8 @@ int main(int argc, char *argv[])
         {
             termina("Errore chiusura connessione");
         }
+
+        printf("chiusa connessione\n");
 
         free(line);
     }
