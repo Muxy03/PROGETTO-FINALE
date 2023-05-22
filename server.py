@@ -88,3 +88,4 @@ if __name__ == '__main__':
         p = subprocess.Popen(["archivio", f"{args.w}", f"{args.r}"])
 
     main(nthreads=args.nthread)
+    
