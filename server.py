@@ -69,7 +69,7 @@ if __name__ == '__main__':
         os.mkfifo("caposc")
 
     parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("nthread",type=int,help="numero massimo di thread che il server deve utilizzare contemporanemente per la gestione dei client")
+    parser.add_argument("nthread",required=True,type=int,help="numero massimo di thread che il server deve utilizzare contemporanemente per la gestione dei client")
     parser.add_argument("-r",type=int,help="numero thread lettori",default=3)
     parser.add_argument("-w",type=int,help="numero thread scrittori",default=3)
     parser.add_argument("-v",help="chiamare il programma archivio mediante valgrind con opzioni valgrind --leak-check=full --show-leak-kinds=all --log-file=valgrind-%p.log")
