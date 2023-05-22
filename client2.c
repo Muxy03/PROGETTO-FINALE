@@ -6,6 +6,7 @@
 #include <string.h>  // funzioni per stringhe
 #include <errno.h>   // richiesto per usare errno
 #include <unistd.h>
+#include <fcntl.h> /* For O_* constants */
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
@@ -13,7 +14,13 @@
 // host e port a cui connettersi
 #define HOST "127.0.0.1"
 #define PORT 57943 // MAT:637943
-#define MAX_SEQUENCE_LENGTH 2048
+#define Max_sequence_length 2048
+#define typec "1"
+
+typedef struct
+{
+    char *nomefile;
+} args;
 
 void termina(const char *messaggio)
 {
@@ -28,61 +35,57 @@ void termina(const char *messaggio)
     exit(1);
 }
 
-typedef struct
+void *Thread(void *arg)
 {
-    char *nomefile;
-    int *fd_sck;
-} argT;
-
-void *ThreadF(void *arg)
-{
-    argT *a = (argT *)arg;
-
+    args *a = (args *)arg;
+    FILE *f = fopen(a->nomefile, O_RDONLY);
+    char *line = "vuoto";
+    ssize_t e;
+    int tmp;
+    char stop[1];
+    
+    int fd_skt = 0;
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
-    int client_type = 1;
-    int terminator = 0;
-    char *line = NULL;
-    size_t line_length_tot = 0;
-    size_t line_length = 0;
-    ssize_t read;
 
-    FILE *file = fopen(a->nomefile, "r");
-    if (file == NULL)
+    if ((fd_skt = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        termina("Impossibile aprire il file\n");
+        termina("Errore creazione socket");
     }
 
-    if ((a->fd_sck = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    if (connect(fd_skt, &serv_addr, sizeof(serv_addr)) < 0)
     {
-        termina("Errore creazione socket\n");
+        termina("Errore apertura connessione");
     }
 
-    if (connect(a->fd_sck, &serv_addr, sizeof(serv_addr)) < 0)
-    {
-        termina("Errore apertura connessione\n");
+    e = write(fd_skt, typec, strlen(typec));
+    
+    if(e < 0){
+        termina("Errore scrittura su socket");
     }
 
-    send(a->fd_sck, &client_type, sizeof(int), 0);
-
-    while ((read = getline(&line, &line_length, file)) != -1)
+    while (fgets(line,strlen(line),f) != NULL)
     {
-        assert(read <= MAX_SEQUENCE_LENGTH);
-        send(a->fd_sck, &line, line_length, 0);
-    }
+        if (strlen(line) <= Max_sequence_length)
+        {
+            // send(fd_skt, line, strlen(line), 0);
+            e = write(fd_skt, line, strlen(line));
+        }
+        //free(line);
+    };
 
-    send(a->fd_sck, &terminator, 0, 0);
+    e = write(fd_skt, stop, 0);
 
-    if (close(a->fd_sck) < 0)
+    e = read(fd_skt, &tmp, sizeof(int));
+    assert(e == sizeof(int));
+    printf("Numero di parole: %d\n", ntohl(tmp));
+
+    if (close(fd_skt) < 0)
     {
-        termina("Errore chiusura socket\n");
+        termina("Errore chiusura socket");
     }
-
-    free(line);
-    fclose(file);
-
     return NULL;
 }
 
@@ -94,26 +97,20 @@ int main(int argc, char *argv[])
         termina("inserire almeno un file di testo dopo ./client2\n");
         return 1;
     }
+    int nthread = argc - 1;
+    pthread_t t[nthread];
+    args files[nthread];
 
-    int ntextF = argc - 1;
-    pthread_t t[ntextF];
-    argT arguments[ntextF];
-
-    for (int i = 0; i < ntextF; i++)
+    for (int i = 0; i < nthread; i++)
     {
-        arguments[i].nomefile = argv[i + 1];
-        arguments[i].fd_sck = 0;
-        if (pthread_create(&t[i], NULL, ThreadF, &arguments[i]) != 0)
-        {
-            termina("Errore creazione thread\n");
-        }
+        files[i].nomefile = argv[nthread - (i+1)];
+        pthread_create(&t[i], NULL, &Thread, &files[i]);
     }
 
-    for(int i=0;i<ntextF;i++){
-        if (pthread_join(t[i], NULL) != 0)
-        {
-            termina("Errore join thread\n");
-        }
+    for (int i = 0; i < nthread; i++)
+    {
+       pthread_join(t[i], NULL);
     }
+
     return 0;
 }
