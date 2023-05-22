@@ -15,7 +15,7 @@ def main(host=HOST,port=PORT,nthreads=0):
             server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             server.bind((host, port))
             server.listen()
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=nthreads) as executor:
                 while True:
                     print("In attesa di un client...")
                     # mi metto in attesa di una connessione
