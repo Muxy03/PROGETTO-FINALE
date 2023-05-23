@@ -57,8 +57,6 @@ void *Thread(void *arg)
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
-    pthread_mutex_lock(a->mutex);
-
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         termina("Errore creazione socket");
@@ -103,8 +101,6 @@ void *Thread(void *arg)
     {
         termina("Errore chiusura socket");
     }
-
-    pthread_mutex_unlock(a->mutex);
 
     printf("chiusa connessione\n");
     printf("THREAD FINITO\n");
