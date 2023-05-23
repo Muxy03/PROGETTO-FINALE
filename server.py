@@ -61,9 +61,9 @@ def gestisci_connessione(conn,addr):
             with open("caposc","w") as f:
                 f.write(linea+'\n')
         logging.debug(f"Connessione di tipo B, scritti {totb} bytes in caposc\n")
-        conn.sendall(struct.pack('!<I', totdseq))
+        conn.sendall(struct.pack('!<I', totdseq)[0])
     print("fine connessione")
-    
+
 
 if __name__ == '__main__':
 

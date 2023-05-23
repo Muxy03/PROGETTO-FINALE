@@ -478,8 +478,6 @@ int main(int argc, char *argv[])
     pthread_create(&sigH, NULL, &sigHandler, &arg);
 
     pthread_join(sigH, NULL);
-
-    printf("termino\n");
-
+    
     return 0;
 }
