@@ -41,13 +41,14 @@ int main(int argc, char *argv[])
     ssize_t e;
     FILE *f = fopen(argv[1], "r");
 
+    int fd_skt = 0;
+    struct sockaddr_in serv_addr;
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_addr.s_addr = inet_addr(HOST);
+
     while (getline(&line, &len, f) > 0)
     {
-        int fd_skt = 0;
-        struct sockaddr_in serv_addr;
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(PORT);
-        serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
         if ((fd_skt = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         {
@@ -63,7 +64,7 @@ int main(int argc, char *argv[])
 
         printf("aperta connessione\n");
 
-        e = write(fd_skt, typec, strlen(typec));
+        e = write(fd_skt,typec, sizeof(typec));
 
         printf("scritto tipo\n");
 
@@ -72,11 +73,11 @@ int main(int argc, char *argv[])
             termina("Errore scrittura tipo");
         }
 
-        if (strlen(line) <= Max_sequence_length)
+        if ( strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
             printf("scritto linea:%s\n", line);
             e = write(fd_skt, line, strlen(line));
-            
+
             if (e < 0)
             {
                 termina("Errore scrittura tipo");

@@ -209,17 +209,17 @@ void *capoScrittori(void *arg)
     pthread_t t[*(a->nthread)];
     argT b[*(a->nthread)];
     printf("creo i scrittori\n");
-    // for (int i = 0; i < *(a->nthread); i++)
-    // {
-    //     b[i].index = &index;
-    //     b[i].buffer = a->buffer;
-    //     b[i].mutex = a->mutex;
-    //     b[i].full = a->full;
-    //     b[i].empty = a->empty;
-    //     b[i].hashmutex = a->hashmutex;
-    //     b[i].hash = a->hash;
-    //     pthread_create(&t[i], NULL, Scrittori, &b[i]);
-    // }
+    for (int i = 0; i < *(a->nthread); i++)
+    {
+        b[i].index = &index;
+        b[i].buffer = a->buffer;
+        b[i].mutex = a->mutex;
+        b[i].full = a->full;
+        b[i].empty = a->empty;
+        b[i].hashmutex = a->hashmutex;
+        b[i].hash = a->hash;
+        pthread_create(&t[i], NULL, &Scrittori, &b[i]);
+    }
 
 
     if (read(fd, &len, sizeof(int)) != sizeof(int))
@@ -295,7 +295,7 @@ void *capoLettori(void *arg)
         b[i].empty = a->empty;
         b[i].hashmutex = a->hashmutex;
         b[i].hash = a->hash;
-        pthread_create(&t[i], NULL, Lettori, &b[i]);
+        pthread_create(&t[i], NULL, &Lettori, &b[i]);
     }
 
     if (read(fd, &len, sizeof(int)) != sizeof(int))
@@ -372,10 +372,9 @@ void *sigHandler(void *arg)
         if (s == SIGTERM)
         {
             printf("sono in sigterm\n");
-            *(a->continua) = false;
             pthread_join(*(a->CS), NULL);
             pthread_join(*(a->CL), NULL);
-            fprintf(stdout, "# stringhe distinte nella tabella hash :%d\n", *(a->lenhash));
+            printf("# stringhe distinte nella tabella hash :%d\n", *(a->lenhash));
 
             pthread_mutex_lock(a->mutex);
             ENTRY *current = testa;
@@ -390,6 +389,7 @@ void *sigHandler(void *arg)
             hdestroy();
             pthread_cond_signal(a->hash);
             pthread_mutex_unlock(a->mutex);
+            return NULL;
         }
         else if (s == SIGUSR1)
         {
@@ -409,7 +409,6 @@ void *sigHandler(void *arg)
             pthread_mutex_unlock(a->mutex);
         }
     }
-
     return NULL;
 }
 

@@ -36,33 +36,32 @@ def gestisci_connessione(conn,addr):
   print(f"Contattato da {addr}")
   totdseq = 0
   totb = 0
-  with conn:  
-    print(f"Contattato da {addr}")
-    typecon = conn.recv(1)
-    print(f"Ricevuto tipo {typecon}")
-    if typecon == b'0':
-        print("connessione di tipo A")
+  with conn:
+    typecon = conn.recv(1).decode('utf-8')
+    if typecon == "0":
         data = conn.recv(2048)
-        assert(len(data) <= 2048)
-        linea = struct.unpack(f"!{len(data)}s",data)[0]
-        with open("capolet","w") as f:
-            print(f"scrivo in capolet : {linea.decode()}")
-            f.write(linea.decode()+'\n')
+        print(f"connessione di tipo A")
         logging.debug(f"Connessine di tipo A, scritti {len(data)} bytes in capolet\n")
-    elif typecon == b'1':
+        assert(len(data) <= 2048)
+        linea = data.decode('utf-8')
+        with open("capolet","w") as f:
+            print(f"scrivo in capolet : {linea}")
+            f.write(linea+'\n')
+    elif typecon == "1":
         print("connessione di tipo B")
-        while conn.recv(2048) > 0:
+        while True:
             data = conn.recv(2048)
             assert(len(data) <= 2048)
+            if len(data) == b'0':
+                break
             totdseq+=1
             totb+=len(data)
-            linea = struct.unpack(f"!{len(data)}s",data)[0]
+            linea = data.decode('utf-8')
+            print(f"scrivo in caposc : {linea}")
             with open("caposc","w") as f:
-                print(f"scrivo in caposc : {linea.decode()}")
-                f.write(linea.decode()+'\n')
+                f.write(linea+'\n')
         logging.debug(f"Connessione di tipo B, scritti {totb} bytes in caposc\n")
-        print(f"{totdseq.to_bytes(4,byteorder='big',signed=False)}")
-        conn.sendall(totdseq.to_bytes(4,byteorder='big',signed=False))
+        conn.sendall(struct.pack('<I', totdseq))
     print("fine connessione")
 
 if __name__ == '__main__':
@@ -72,6 +71,9 @@ if __name__ == '__main__':
     
     if(os.path.exists("./caposc")) == False:
         os.mkfifo("caposc")
+    
+    if(os.path.exists("./server.log")) == False:
+        open("server.log", "x")
 
     parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-r",type=int,help="numero thread lettori",default=3)
@@ -85,7 +87,7 @@ if __name__ == '__main__':
                     "--log-file=valgrind-%p.log", 
                     "./archivio", f"{args.w}", f"{args.r}"])
     else:
-        p = subprocess.Popen(["archivio", f"{args.w}", f"{args.r}"])
+        p = subprocess.Popen(["./archivio", f"{args.w}", f"{args.r}"])
 
     main(nthreads=args.nthread)
     
