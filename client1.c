@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
         printf("aperta connessione\n");
 
-        e = write(fd_skt,typec, sizeof(typec));
+        e = write(fd_skt, typec, sizeof(typec));
 
         printf("scritto tipo\n");
 
@@ -73,9 +73,11 @@ int main(int argc, char *argv[])
             termina("Errore scrittura tipo");
         }
 
-        if ( strlen(line) > 0 && strlen(line) <= Max_sequence_length)
+        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
             printf("scritto linea:%s\n", line);
+            // size_t size = strlen(line); // 32 bit -> 4 bytes
+            // e = write(fd_skt, (void *)size, sizeof(size_t));
             e = write(fd_skt, line, strlen(line));
 
             if (e < 0)

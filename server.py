@@ -1,14 +1,8 @@
 #! /usr/bin/env python3
 
-import struct, socket,logging,os,argparse,subprocess,signal,concurrent.futures
+import struct, socket,logging,os,argparse,subprocess,signal,concurrent.futures,threading,sys
 
-logging.basicConfig(filename='./server.log',level=logging.DEBUG,filemode='w',datefmt='%d/%m/%y %H:%M:%S', format='%(asctime)s - %(levelname)s - %(message)s')
-Description = "Server"
-
-HOST = "127.0.0.1"
-PORT = 57943 # MAT:637943
-
-def main(host=HOST,port=PORT,nthreads=0):
+def main(host,port,nthreads):
      # creiamo il server socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:  
@@ -24,46 +18,35 @@ def main(host=HOST,port=PORT,nthreads=0):
                     # fino a quando ci sono thread liberi
                     executor.submit(gestisci_connessione, conn,addr)
         except KeyboardInterrupt:
-            s.shutdown(socket.SHUT_RDWR)
-            os.unlink("./capolet")
-            os.unlink("./caposc")
-            p.send_signal(signal.SIGTERM)
+            pass
     print('Va bene smetto...')
 
 def gestisci_connessione(conn,addr): 
   # L'uso di with serve solo a garantire che
   # conn venga chiusa all'uscita del blocco
   print(f"Contattato da {addr}")
-  totdseq = 0
-  totb = 0
+
   with conn:
     typecon = conn.recv(1).decode('utf-8')
     if typecon == "0":
         data = conn.recv(2048)
-        print(f"connessione di tipo A")
-        logging.debug(f"Connessine di tipo A, scritti {len(data)} bytes in capolet\n")
-        assert(len(data) <= 2048)
         linea = data.decode('utf-8')
-        with open("capolet","w") as f:
-            print(f"scrivo in capolet : {linea}")
-            f.write(linea+'\n')
+        with open("capolet","a") as f:
+            f.write(linea)
     elif typecon == "1":
-        print("connessione di tipo B")
-        while True:
-            data = conn.recv(2048)
-            assert(len(data) <= 2048)
-            if len(data) == b'0':
-                break
-            totdseq+=1
-            totb+=len(data)
-            linea = data.decode('utf-8')
-            print(f"scrivo in caposc : {linea}")
-            with open("caposc","w") as f:
-                f.write(linea+'\n')
-        logging.debug(f"Connessione di tipo B, scritti {totb} bytes in caposc\n")
-        conn.sendall(str(totdseq).encode('utf-8'))
+       pass
     print("fine connessione")
 
+def recv_all(conn,n):
+  chunks = b''
+  bytes_recd = 0
+  while bytes_recd < n:
+    chunk = conn.recv(min(n - bytes_recd, 2048))
+    if len(chunk) == 0:
+      raise RuntimeError("socket connection broken")
+    chunks += chunk
+    bytes_recd = bytes_recd + len(chunk)
+  return chunks
 
 if __name__ == '__main__':
 
@@ -75,6 +58,14 @@ if __name__ == '__main__':
     
     if(os.path.exists("./server.log")) == False:
         open("server.log", "x")
+
+    logging.basicConfig(filename='./server.log',level=logging.DEBUG,filemode='w',datefmt='%d/%m/%y %H:%M:%S', format='%(asctime)s - %(levelname)s - %(message)s')
+    Description = "Server"
+
+    HOST = "127.0.0.1"
+    PORT = 57943 # MAT:637943
+
+    lock = threading.Lock()
 
     parser = argparse.ArgumentParser(description=Description, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-r",type=int,help="numero thread lettori",default=3)
@@ -90,5 +81,5 @@ if __name__ == '__main__':
     else:
         p = subprocess.Popen(["./archivio", f"{args.w}", f"{args.r}"])
 
-    main(nthreads=args.nthread)
+    main(nthreads=args.nthread,host=HOST,port=PORT)
     
