@@ -18,35 +18,44 @@ def main(host,port,nthreads):
                     # fino a quando ci sono thread liberi
                     executor.submit(gestisci_connessione, conn,addr)
         except KeyboardInterrupt:
-            pass
-    print('Va bene smetto...')
+            print("Chiusura server in corso...")
+            s.shutdown(socket.SHUT_RDWR)
+            os.unlink("capolet")
+            os.unlink("caposc")
+            p.send_signal(signal.SIGTERM)
 
 def gestisci_connessione(conn,addr): 
   # L'uso di with serve solo a garantire che
   # conn venga chiusa all'uscita del blocco
   print(f"Contattato da {addr}")
-
   with conn:
     typecon = conn.recv(1).decode('utf-8')
     if typecon == "0":
         data = conn.recv(2048)
         linea = data.decode('utf-8')
-        with open("capolet","a") as f:
-            f.write(linea)
+        logging.debug(f"TIPO A Scritto: {len(data)} bytes")
+        #lock.acquire()
+        fifo = os.open("capolet", os.O_WRONLY)
+        os.write(fifo, linea.encode('utf-8'))
+        os.close(fifo)
+        #lock.release()
     elif typecon == "1":
-       pass
-    print("fine connessione")
-
-def recv_all(conn,n):
-  chunks = b''
-  bytes_recd = 0
-  while bytes_recd < n:
-    chunk = conn.recv(min(n - bytes_recd, 2048))
-    if len(chunk) == 0:
-      raise RuntimeError("socket connection broken")
-    chunks += chunk
-    bytes_recd = bytes_recd + len(chunk)
-  return chunks
+        total_sequences = 0
+        totb = 0
+        while True:
+            data = conn.recv(2048)
+            if data.decode('utf-8') == "STOP":
+                conn.sendall(total_sequences.to_bytes(4, byteorder='big'))
+                break
+            #lock.acquire()
+            fifo = os.open("caposc", os.O_WRONLY)
+            os.write(fifo, data.encode('utf-8'))
+            os.close(fifo)
+            #lock.release()
+            total_sequences += 1
+            totb += len(data)
+        logging.debug(f"TIPO B Scritto: {totb} bytes")
+        print("diomerda")
 
 if __name__ == '__main__':
 

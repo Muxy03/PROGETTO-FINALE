@@ -473,9 +473,9 @@ int main(int argc, char *argv[])
     arg.CS = &capi[0];
     arg.CL = &capi[1];
 
-    pthread_create(&capi[0], NULL, &capoScrittori, &args[0]);
-    pthread_create(&capi[1], NULL, &capoLettori, &args[1]);
-    pthread_create(&sigH, NULL, &sigHandler, &arg);
+    pthread_create(&capi[0], NULL, capoScrittori, &args[0]);
+    pthread_create(&capi[1], NULL, capoLettori, &args[1]);
+    pthread_create(&sigH, NULL, sigHandler, &arg);
 
     pthread_join(sigH, NULL);
     

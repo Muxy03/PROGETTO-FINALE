@@ -97,8 +97,8 @@ void *Thread(void *arg)
     char *line = NULL;
     size_t len = 0;
     ssize_t e, letta;
-    char *tmp;
-    char stop = '\0';
+    int tmp;
+    char *stop = "STOP";
 
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
@@ -134,24 +134,28 @@ void *Thread(void *arg)
         if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
             // pthread_mutex_lock(a->semaforo);
+            char buf[strlen(line)];
+            strcpy(buf, line);
             printf("mando sequenza %s\n", line);
-            e = write(fd, line, strlen(line));
+            e = write(fd, buf, sizeof(buf));
+            //e = write(fd, line, strlen(line));
             // pthread_mutex_unlock(a->semaforo);
         }
     }
-    free(line);
     fclose(f);
     // pthread_mutex_lock(a->semaforo);
-    printf("mandato stop\n");
-    e = write(fd, "", 0);
-    // pthread_mutex_unlock(a->semaforo);
-
-    printf("attendendo numero di sequenze\n");
-    // pthread_mutex_lock(a->semaforo);
+    // char buf[2048];
+    // strcpy(buf, &stop);
+    // printf("mando sequenza %s\n", buf);
+    // e = send(fd, buf, strlen(buf), 0);
+    sleep(1);
+    char buf[sizeof(stop)];
+    strcpy(buf, stop);
+    e = write(fd,buf, strlen(buf));
     e = read(fd, &tmp, sizeof(tmp));
-    // pthread_mutex_unlock(a->semaforo);
-    printf("Numero di sequenze: %s\n", tmp);
-
+    // // pthread_mutex_unlock(a->semaforo);
+    //printf("%d\n",tmp);
+    printf("Numero di sequenze: %d\n", ntohl(tmp));
     if (close(fd) < 0)
     {
         termina("Errore chiusura socket");
