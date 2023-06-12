@@ -20,20 +20,20 @@ typedef struct
 {
     char **buffer;
     int counter;
-    pthread_mutex_t *hmutex;// hash table
+    pthread_mutex_t *hmutex;  // hash table
     pthread_mutex_t *bfmutex; // buffer PC
-    pthread_cond_t hcond; // hash table
-    pthread_cond_t empty; // buffer PC
-    pthread_cond_t full; // buffer PC
-}SLarg;
-
+    pthread_cond_t hcond;     // hash table
+    pthread_cond_t empty;     // buffer PC
+    pthread_cond_t full;      // buffer PC
+} SLarg;
 
 void termina(const char *messaggio)
 {
-    if (errno != 0)
-        perror(messaggio);
+    if (errno == 0)
+        fprintf(stderr, "== %d == %s\n", getpid(), messaggio);
     else
-        fprintf(stderr, "%s\n", messaggio);
+        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio,
+                strerror(errno));
     exit(1);
 }
 
@@ -49,8 +49,9 @@ ENTRY *crea_entry(char *s)
     if (e->key == NULL || e->data == NULL)
     {
         termina("errore malloc entry 2");
-    *((int *)e->data) = 1;
-    return e;
+        *((int *)e->data) = 1;
+        return e;
+    }
 }
 
 void distruggi_entry(ENTRY *e)
@@ -67,7 +68,6 @@ void aggiungi(char *s)
     if (r == NULL)
     {
         r = hsearch(*e, ENTER);
-        lenhash++;
         if (r == NULL)
         {
             termina("errore o tabella piena");
@@ -77,7 +77,7 @@ void aggiungi(char *s)
     {
         assert(strcmp(e->key, r->key) == 0);
         int *TMP = (int *)r->data;
-        *TMP +=1;
+        *TMP += 1;
         distruggi_entry(e);
     }
 }
@@ -96,20 +96,20 @@ int conta(char *s)
     return n;
 }
 
-void *Scrittori(void *args){
-
+void *Scrittori(void *args)
+{
 }
 
-void *Lettori(void *args){
-
+void *Lettori(void *args)
+{
 }
 
-void *Capi(void *args){
-
+void *Capi(void *args)
+{
 }
 
-void *Signal_handler(void *args){
-
+void *Signal_handler(void *args)
+{
 }
 
 int main(int argc, char *argv[])
@@ -119,10 +119,12 @@ int main(int argc, char *argv[])
         termina("Uso: ./archivio <w> <r>\n");
     }
 
+    int scrittori = atoi(argv[1]);
+    int lettori = atoi(argv[2]);
+
     pthread_t writers[scrittori];
     pthread_t readers[lettori];
     pthread_t capi[2]; // 0: lettori, 1: scrittori
 
     return 0;
 }
-
