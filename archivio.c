@@ -27,6 +27,15 @@ typedef struct
     pthread_cond_t full;      // buffer PC
 } SLarg;
 
+typedef struct{
+    char *fifo;
+    char **buffer;
+    int counter;
+    pthread_mutex_t *bfmutex; // buffer PC
+    pthread_cond_t empty;     // buffer PC
+    pthread_cond_t full;      // buffer PC
+}CSLarg;
+
 void termina(const char *messaggio)
 {
     if (errno == 0)
