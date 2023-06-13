@@ -22,7 +22,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             parola = conn.recv(2048).decode().strip("\x00").rstrip('\n')
             print(f"Parola ricevuta:{parola}")
             with open("capolet","wb") as f:
-               f.write(str(len(parola)).encode())
                f.write(parola.encode())
             print("chiusa connessione")
 
@@ -38,6 +37,5 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                   break
                totseq += 1
                with open("caposc","wb") as f:
-                  f.write(str(len(parola)).encode())
                   f.write(parola.encode())
             print("chiusa connessione")
