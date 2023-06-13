@@ -6,194 +6,94 @@
 #include <string.h>  // funzioni per stringhe
 #include <errno.h>   // richiesto per usare errno
 #include <unistd.h>
-#include <fcntl.h> /* For O_* constants */
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <pthread.h>
-#include <semaphore.h>
 
 // host e port a cui connettersi
 #define HOST "127.0.0.1"
-#define PORT 57943 // MAT:637943
+#define PORT 57943 // 637943
 #define Max_sequence_length 2048
-#define typec "1"
+#define tipoc "1"
 
 typedef struct
 {
-    char *nomefile;
-    int *socket;
-    pthread_mutex_t *semaforo;
-} args;
-
-ssize_t readn(int fd, void *ptr, size_t n)
-{
-    size_t nleft;
-    ssize_t nread;
-
-    nleft = n;
-    while (nleft > 0)
-    {
-        if ((nread = read(fd, ptr, nleft)) < 0)
-        {
-            if (nleft == n)
-                return -1; /* error, return -1 */
-            else
-                break; /* error, return amount read so far */
-        }
-        else if (nread == 0)
-            break; /* EOF */
-        nleft -= nread;
-        ptr += nread;
-    }
-    return (n - nleft); /* return >= 0 */
-}
-
-ssize_t writen(int fd, void *ptr, size_t n)
-{
-    size_t nleft;
-    ssize_t nwritten;
-
-    nleft = n;
-    while (nleft > 0)
-    {
-        if ((nwritten = write(fd, ptr, nleft)) < 0)
-        {
-            if (nleft == n)
-                return -1; /* error, return -1 */
-            else
-                break; /* error, return amount written so far */
-        }
-        else if (nwritten == 0)
-            break;
-        nleft -= nwritten;
-        ptr += nwritten;
-    }
-    return (n - nleft); /* return >= 0 */
-}
+    char *nf;
+} Targ;
 
 void termina(const char *messaggio)
 {
     if (errno == 0)
-    {
         fprintf(stderr, "== %d == %s\n", getpid(), messaggio);
-    }
     else
-    {
-        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio, strerror(errno));
-    }
+        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio,
+        strerror(errno));
     exit(1);
 }
 
-void *Thread(void *arg)
+void *Tfunc(void *args)
 {
-    printf("THREAD PARTITO\n");
-    args *a = (args *)arg;
-    FILE *f = fopen(a->nomefile, "r");
-    if (f == NULL)
-    {
-        termina("ERRORE APERTURA file");
-    }
-    int fd;
-    char *line = NULL;
-    size_t len = 0;
-    ssize_t e, letta;
-    int tmp;
-    char *stop = "STOP";
+    Targ *a = (Targ *)args;
+    FILE *f = fopen(a->nf, "r");
 
+    int fd = 0; // file descriptor associato al socket
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
-    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-    {
-        termina("Errore creazione socket");
-    }
+    char *line = NULL;
+    size_t len = 0;
+    int nseq;
+    char stop = '\0';
+    ssize_t e;
 
-    printf("creato socket\n");
+    if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        termina("Errore creazione socket");
 
     if (connect(fd, &serv_addr, sizeof(serv_addr)) < 0)
-    {
         termina("Errore apertura connessione");
-    }
-    printf("aperta connessione\n");
 
-    // pthread_mutex_lock(a->semaforo);
-    e = write(fd, typec, sizeof(typec));
-    // pthread_mutex_unlock(a->semaforo);
+    e = write(fd, tipoc, sizeof(tipoc));
 
-    if (e < 0)
-    {
-        termina("Errore scrittura su socket");
-    }
-
-    printf("scritto tipo connessione %s\n", typec);
-
-    while ((letta = getline(&line, &len, f)) != -1)
+    while (getline(&line, &len, f) != -1)
     {
         if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
-            // pthread_mutex_lock(a->semaforo);
-            char buf[strlen(line)];
-            strcpy(buf, line);
-            printf("mando sequenza %s\n", line);
-            e = write(fd, buf, sizeof(buf));
-            //e = write(fd, line, strlen(line));
-            // pthread_mutex_unlock(a->semaforo);
+            e = write(fd, line, len);
+            sleep(1);
         }
     }
-    fclose(f);
-    // pthread_mutex_lock(a->semaforo);
-    // char buf[2048];
-    // strcpy(buf, &stop);
-    // printf("mando sequenza %s\n", buf);
-    // e = send(fd, buf, strlen(buf), 0);
     sleep(1);
-    char buf[sizeof(stop)];
-    strcpy(buf, stop);
-    e = write(fd,buf, strlen(buf));
-    e = read(fd, &tmp, sizeof(tmp));
-    // // pthread_mutex_unlock(a->semaforo);
-    //printf("%d\n",tmp);
-    printf("Numero di sequenze: %d\n", ntohl(tmp));
-    if (close(fd) < 0)
-    {
-        termina("Errore chiusura socket");
-    }
-
-    printf("chiusa connessione\n");
-    printf("THREAD FINITO\n");
-    return NULL;
+    e = write(fd, &stop, sizeof(stop));
+    fclose(f);
+    e = read(fd, &nseq, sizeof(nseq));
+    printf("Numero sequenze: %d\n", ntohl(nseq));
+    close(fd);
+    pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[])
 {
-
     if (argc < 2)
     {
-        termina("inserire almeno un file di testo dopo ./client2\n");
-        return 1;
+        termina("Uso ./client2 nomefile1 nomefile2 ...");
     }
+
     int nthread = argc - 1;
-    int socket = 0;
-    pthread_mutex_t semaforo = PTHREAD_MUTEX_INITIALIZER;
     pthread_t t[nthread];
-    args files[nthread];
+    Targ a[nthread];
 
     for (int i = 0; i < nthread; i++)
     {
-        files[i].nomefile = argv[i + 1];
-        files[i].semaforo = &semaforo;
-        files[i].socket = &i;
-        pthread_create(&t[i], NULL, Thread, &files[i]);
+        a[i].nf = argv[i + 1];
+        pthread_create(&t[i], NULL, Tfunc, &a[i]);
     }
 
     for (int i = 0; i < nthread; i++)
     {
         pthread_join(t[i], NULL);
     }
-
-    pthread_mutex_destroy(&semaforo);
 
     return 0;
 }
