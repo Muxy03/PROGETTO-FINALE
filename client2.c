@@ -65,12 +65,12 @@ void *Tfunc(void *args)
     {
         if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
-            tmp = write(fd, line, len);
+            tmp = write(fd, line, strlen(line));
             sleep(1);
         }
     }
     sleep(1);
-    tmp = write(fd, &stop, strlen(stop));
+    tmp = write(fd, stop, strlen(stop));
     fclose(f);
     sleep(1);
     tmp = read(fd, &nseq, sizeof(nseq));
