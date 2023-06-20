@@ -36,12 +36,8 @@ all: $(EXECS)
 # esempio di target che non corrisponde a una compilazione
 # ma esegue la cancellazione dei file oggetto e degli eseguibili
 clean: 
-	rm -f *.o $(EXECS)
+	rm -f *.o $(EXECS) capolet caposc valgrind* server.log
 	
 # crea file zip della lezione	
 zip:
-	zip threads.zip *.c *.h *.py makefile
-
-
-clear:
-	rm -f *.o $(EXECS)
+	zip progetto.zip *.c *.h *.py makefile file1 file2 file3
