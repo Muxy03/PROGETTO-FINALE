@@ -10,7 +10,6 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
-// host e port a cui connettersi
 #define HOST "127.0.0.1"
 #define PORT 57943 // 637943
 #define Max_sequence_length 2048
@@ -24,10 +23,13 @@ typedef struct
 void termina(const char *messaggio)
 {
     if (errno == 0)
+    {
         fprintf(stderr, "== %d == %s\n", getpid(), messaggio);
+    }
     else
-        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio,
-        strerror(errno));
+    {
+        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio, strerror(errno));
+    }
     exit(1);
 }
 
@@ -36,44 +38,48 @@ void *Tfunc(void *args)
     Targ *a = (Targ *)args;
     FILE *f = fopen(a->nf, "r");
 
-    int fd = 0; // file descriptor associato al socket
+    int fd = 0;
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
     char *line = NULL;
-    size_t len = 0;
+    size_t len = 0,tmp;
     int nseq;
-    char stop = '\0';
-    ssize_t e;
+    char *stop = "";
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
         termina("Errore creazione socket");
+    }
 
     if (connect(fd, &serv_addr, sizeof(serv_addr)) < 0)
+    {
         termina("Errore apertura connessione");
+    }
 
-    e = write(fd, tipoc, sizeof(tipoc));
+    tmp = write(fd, tipoc, sizeof(tipoc));
 
     while (getline(&line, &len, f) != -1)
     {
         if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
         {
-            e = write(fd, line, len);
+            tmp = write(fd, line, len);
             sleep(1);
         }
     }
     sleep(1);
-    e = write(fd, &stop, sizeof(stop));
+    tmp = write(fd, &stop, strlen(stop));
     fclose(f);
-    e = read(fd, &nseq, sizeof(nseq));
+    sleep(1);
+    tmp = read(fd, &nseq, sizeof(nseq));
     printf("Numero sequenze: %d\n", ntohl(nseq));
     close(fd);
     pthread_exit(NULL);
 }
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
     if (argc < 2)
     {
