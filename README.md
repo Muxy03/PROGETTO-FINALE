@@ -1,9 +1,9 @@
-#Progetto Finale Laboratorio II
+# Progetto Finale Laboratorio II
 
 Scelte implementative:
 1. connessione di tipo A  -> il client manda la stringa "1"
 2. connessione di tipo B -> il client manda la stringa "0"
-3. terminazione thread in archivio -> scrittura nelle fifo di "0000" e aggiornamento variabile fine (da 0 a 1)
+3. terminazione thread (Scrittori, Lettori e rispettivi Capi) in archivio -> scrittura nelle fifo di "0000" e aggiornamento variabile fine (da 0 a 1)
 4. per archivio ho creato 5 strutture dati:
 	1. Buffer -> struttura per la gestione dei buffer
 	2. Gargs -> variabili per il funzionamento di Gestore
