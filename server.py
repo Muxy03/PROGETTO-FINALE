@@ -48,7 +48,6 @@ def gestisci_connessione(conn, addr):
                 parola = conn.recv(2048)
                 lunghezza=len(parola.decode().strip("\x00").rstrip('\n'))
         
-        print("totales",totales)
         conn.sendall(totales.to_bytes(4,"big"))
         print("chiusura connessione")
 
