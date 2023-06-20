@@ -41,7 +41,6 @@ def gestisci_connessione(conn, addr):
         lunghezza=len(parola.decode().strip("\x00").rstrip('\n'))
         with open("caposc", "wb") as fifo:
             while parola.decode() != "":
-                print("p",parola.decode().strip("\x00").rstrip('\n'))
                 totales+=1
                 st="0"*(4-lunghezza) + str(lunghezza)
                 fifo.write(st.encode()+parola)
