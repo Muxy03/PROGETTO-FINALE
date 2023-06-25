@@ -73,6 +73,6 @@ if __name__ == "__main__":
     if args.v :
         p = subprocess.Popen(["valgrind","--leak-check=full","--show-leak-kinds=all","--log-file=valgrind-%p.log","./archivio",f"{args.w}",f"{args.r}"])
     else :
-        p = subprocess.Popen(["./archivioT",f"{args.w}",f"{args.r}"])
+        p = subprocess.Popen(["./archivio",f"{args.w}",f"{args.r}"])
 
     main(args.t)
