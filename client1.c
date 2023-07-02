@@ -1,31 +1,6 @@
-#define _GNU_SOURCE  // permette di usare estensioni GNU
-#include <stdio.h>   // permette di usare scanf printf etc ...
-#include <stdlib.h>  // conversioni stringa exit() etc ...
-#include <stdbool.h> // gestisce tipo bool
-#include <assert.h>  // permette di usare la funzione ass
-#include <string.h>  // funzioni per stringhe
-#include <errno.h>   // richiesto per usare errno
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
+#include "progetto.h"
 
-#define HOST "127.0.0.1"
-#define PORT 57943 // 637943
-#define Max_sequence_length 2048
 #define tipoc "0"
-
-void termina(const char *messaggio)
-{
-    if (errno == 0)
-    {
-        fprintf(stderr, "== %d == %s\n", getpid(), messaggio);
-    }
-    else
-    {
-        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio, strerror(errno));
-    }
-    exit(1);
-}
 
 int main(int argc, char const *argv[])
 {
