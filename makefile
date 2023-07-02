@@ -16,28 +16,27 @@ LDLIBS=-lm -lrt -pthread
 #  $^ viene sostituito con tutti i prerequisiti
 
 # elenco degli eseguibili da creare
-EXECS= client1 client2 archivio
+EXECS= archivio client1 client2
 
-# primo target: gli eseguibili sono precondizioni
-# quindi verranno tutti creati
 all: $(EXECS) 
 
+archivio: archivio.o progetto.o
+archivio.o: archivio.c progetto.h
 
-# regola per la creazioni degli eseguibili utilizzando xerrori.o
-%: %.o 
-	$(CC) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+client2: client2.o progetto.o
+client2.o: client2.c progetto.h
 
+client1: client1.o progetto.o
+client1.o: client1.c progetto.h
 
-# regola per la creazione di file oggetto che dipendono da xerrori.h
-%.o: %.c 
-	$(CC) $(CFLAGS) -c $<
-
+progetto.o: progetto.c progetto.h
  
 # esempio di target che non corrisponde a una compilazione
 # ma esegue la cancellazione dei file oggetto e degli eseguibili
 clean: 
-	rm -f *.o $(EXECS) capolet caposc valgrind* server.log
+	rm -f *.o $(EXECS) capolet caposc valgrind* server.log lettori.log
 	
 # crea file zip della lezione	
 zip:
-	zip progetto.zip *.c *.h *.py makefile file1 file2 file3
+	zip threads.zip *.c *.h *.py makefile
+
