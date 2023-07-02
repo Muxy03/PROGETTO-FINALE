@@ -14,7 +14,7 @@ Scelte implementative:
 
 6. per archivio ho creato 5 strutture dati:
 	1. Buffer -> struttura per la gestione dei buffer
-	2. Garg -> variabili per il funzionamento di Gestore
+	2. GArg -> variabili per il funzionamento di Gestore
 	3. SLArg -> analogo di Gargs ma per Scrittore e Lettore
 	4. CArg -> analogo di Gargs ma per Capo-Scrittore e Capo-Lettore
 	5. Node -> struttura per la creazione di Nodi della Linked List
