@@ -2,7 +2,7 @@
 
 Scelte implementative:
 
-1.all'interno di progetto.h vi sono tutti gli include, le costanti (HOST,PORT), le strutture dati più importanti e le funzioni più importanti. Ovviamente le definizioni dei prototipi dell funzioni sono in progetto.c
+1.all'interno di progetto.h vi sono tutti gli include, le costanti (HOST,PORT), le strutture dati più importanti e le funzioni più importanti (ovviamente le definizioni dei prototipi dell funzioni sono in progetto.c)
 
 2. connessione di tipo A  -> il client manda la stringa "1"
 
