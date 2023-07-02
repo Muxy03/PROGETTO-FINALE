@@ -1,37 +1,11 @@
-#define _GNU_SOURCE  // permette di usare estensioni GNU
-#include <stdio.h>   // permette di usare scanf printf etc ...
-#include <stdlib.h>  // conversioni stringa exit() etc ...
-#include <stdbool.h> // gestisce tipo bool
-#include <assert.h>  // permette di usare la funzione ass
-#include <string.h>  // funzioni per stringhe
-#include <errno.h>   // richiesto per usare errno
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <pthread.h>
+#include "progetto.h"
 
-#define HOST "127.0.0.1"
-#define PORT 57943 // 637943
-#define Max_sequence_length 2048
 #define tipoc "1"
 
 typedef struct
 {
     char *nf;
 } Targ;
-
-void termina(const char *messaggio)
-{
-    if (errno == 0)
-    {
-        fprintf(stderr, "== %d == %s\n", getpid(), messaggio);
-    }
-    else
-    {
-        fprintf(stderr, "== %d == %s: %s\n", getpid(), messaggio, strerror(errno));
-    }
-    exit(1);
-}
 
 void *Tfunc(void *args)
 {
@@ -47,7 +21,7 @@ void *Tfunc(void *args)
     char *line = NULL;
     size_t len = 0,tmp;
     int nseq;
-    char *stop = "";
+    char *stop = "STOP";
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -63,8 +37,9 @@ void *Tfunc(void *args)
 
     while (getline(&line, &len, f) != -1)
     {
-        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
+        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length && strcmp(line, "\n") != 0)
         {
+            printf("Linea: %s", line);
             tmp = write(fd, line, strlen(line));
             sleep(1);
         }
@@ -72,7 +47,6 @@ void *Tfunc(void *args)
     sleep(1);
     tmp = write(fd, stop, strlen(stop));
     fclose(f);
-    sleep(1);
     tmp = read(fd, &nseq, sizeof(nseq));
     printf("Numero sequenze: %d\n", ntohl(nseq));
     close(fd);
