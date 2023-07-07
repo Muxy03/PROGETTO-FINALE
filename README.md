@@ -6,9 +6,9 @@ Scelte implementative:
 
 2. Nel server scrivo la lunghezza della riga ricevuta tramite connessione socket nella fifo d'interesse, prima di scrivere nella medesima fifo la riga stessa, mediante: "0"*(4-len(str(lunghezza))) + str(lunghezza) -> questa formula mi permette di scrivere la lunghezza con 4 cifre sempre (ex: riga = ciao => lunghezza = 4 => "0004" = lunghezza scritta nella fifo). Ovviamente i vari capi convertiranno questa lunghezza espressa come stringa in un intero per le operazioni successive (mediante funzione atoi);
 
-3. Connessione di tipo A  -> il client manda la stringa "1"
+3. Connessione di tipo A  -> il client manda la stringa "0"
 
-4. Connessione di tipo B -> il client manda la stringa "0"
+4. Connessione di tipo B -> il client manda la stringa "1"
 
 5. Terminazione thread (Scrittori, Lettori e rispettivi Capi) in archivio -> scrittura nelle fifo di "0000" e aggiornamento variabile fine (da 0 a 1)
 
