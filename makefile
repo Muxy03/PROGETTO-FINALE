@@ -16,7 +16,7 @@ LDLIBS=-lm -lrt -pthread
 #  $^ viene sostituito con tutti i prerequisiti
 
 # elenco degli eseguibili da creare
-EXECS= archivio client1 client2
+EXECS= archivio client1 client2 pulizia
 
 all: $(EXECS) 
 
@@ -30,6 +30,9 @@ client1: client1.o progetto.o
 client1.o: client1.c progetto.h
 
 progetto.o: progetto.c progetto.h
+
+pulizia:
+	rm -f *.o
  
 # esempio di target che non corrisponde a una compilazione
 # ma esegue la cancellazione dei file oggetto e degli eseguibili

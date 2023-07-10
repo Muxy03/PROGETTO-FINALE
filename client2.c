@@ -21,7 +21,7 @@ void *Tfunc(void *args)
     char *line = NULL;
     size_t len = 0,tmp;
     int nseq;
-    char stop[1] = "";
+    char *stop = "";
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
