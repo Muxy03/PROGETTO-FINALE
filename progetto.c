@@ -255,7 +255,7 @@ void *Gestore(void *arg)
             Distruggi_lista(head);
             hdestroy();
             tot = 0;
-            pthread_mutex_unlock(a->h_mutex);
+            pthread_mutex_unlock(a->ht_mutex);
             break;
         }
         else if (sig == SIGUSR1)
