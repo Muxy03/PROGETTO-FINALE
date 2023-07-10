@@ -224,7 +224,12 @@ void *Gestore(void *arg)
         sigwait(a->set, &sig);
         if (sig == SIGINT)
         {
-            fprintf(stderr, "\nNella tabella hash ci sono %d stringhe distinte.\n", tot);
+            pthread_mutex_lock(a->ht_mutex);
+            char buf[256];
+            sprintf(buf,"Nella tabella hash ci sono %d stringhe distinte.\n", tot);
+            write(2,buf,strlen(buf));
+            //fprintf(stderr, "\nNella tabella hash ci sono %d stringhe distinte.\n", tot);
+            pthread_mutex_unlock(a->ht_mutex);
         }
         else if (sig == SIGTERM)
         {
@@ -241,11 +246,16 @@ void *Gestore(void *arg)
             pthread_cond_broadcast(a->S_full);
             pthread_cond_broadcast(a->L_full);
 
-            printf("\nNella tabella hash ci sono %d stringhe distinte.\n", tot);
-            fflush(stdout);
+            pthread_mutex_lock(a->ht_mutex);
+            char buf[256];
+            sprintf(buf,"Nella tabella hash ci sono %d stringhe distinte.\n", tot);
+            write(1,buf,strlen(buf));
+            //printf("\nNella tabella hash ci sono %d stringhe distinte.\n", tot);
+            //fflush(stdout);
             Distruggi_lista(head);
             hdestroy();
             tot = 0;
+            pthread_mutex_unlock(a->h_mutex);
             break;
         }
         else if (sig == SIGUSR1)
@@ -255,7 +265,10 @@ void *Gestore(void *arg)
             hdestroy();
             hcreate(Num_elem);
             tot = 0;
-            printf("Tabella hash resettata - %d\n", tot);
+            char buf[256];
+            sprintf(buf,"Tabella hash resettata - %d\n", tot);
+            write(1,buf,strlen(buf));
+            //printf("Tabella hash resettata - %d\n", tot);
             pthread_mutex_unlock(a->ht_mutex);
         }
     }
