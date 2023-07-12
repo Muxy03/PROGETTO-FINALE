@@ -225,7 +225,9 @@ void *Gestore(void *arg)
         sigwait(a->set, &sig);
         if (sig == SIGINT)
         {
+            pthread_mutex_lock(a->ht_mutex);
             fprintf(stderr, "Nella tabella hash ci sono %d stringhe distinte.\n", tot);
+            pthread_mutex_unlock(a->ht_mutex);
         }
         else if (sig == SIGTERM)
         {
