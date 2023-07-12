@@ -17,7 +17,6 @@ LDLIBS=-lm -lrt -pthread
 
 # elenco degli eseguibili da creare
 EXECS= archivio client1 client2 pulizia
-
 all: $(EXECS) 
 
 archivio: archivio.o progetto.o
@@ -31,8 +30,9 @@ client1.o: client1.c progetto.h
 
 progetto.o: progetto.c progetto.h
 
-pulizia:
+pulizia: 
 	rm -f *.o && chmod +x server.py
+
  
 # esempio di target che non corrisponde a una compilazione
 # ma esegue la cancellazione dei file oggetto e degli eseguibili

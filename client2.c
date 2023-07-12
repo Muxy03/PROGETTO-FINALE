@@ -19,7 +19,7 @@ void *Tfunc(void *args)
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
     char *line = NULL;
-    size_t len = 0, tmp;
+    size_t len = 0,tmp;
     int nseq;
     char *stop = "";
 
@@ -45,10 +45,10 @@ void *Tfunc(void *args)
         }
     }
     sleep(1);
+    tmp = write(fd, stop, 1);
     fclose(f);
-    tmp = write(fd, stop, 1*sizeof(char));
     tmp = read(fd, &nseq, sizeof(nseq));
-    printf("\nNumero sequenze: %d\n", ntohl(nseq));
+    printf("Numero sequenze: %d\n", ntohl(nseq));
     close(fd);
     pthread_exit(NULL);
 }

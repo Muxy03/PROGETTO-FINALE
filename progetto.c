@@ -111,6 +111,7 @@ void Distruggi_lista(Node *head)
         distruggi_entry(tmp->e);
         free(tmp);
     }
+    printf("Lista distrutta\n");
 }
 
 void *CapoScrittore(void *arg)
@@ -241,8 +242,8 @@ void *Gestore(void *arg)
             pthread_cond_broadcast(a->S_full);
             pthread_cond_broadcast(a->L_full);
 
-            printf("Nella tabella hash ci sono %d stringhe distinte.\n", tot);
             pthread_mutex_lock(a->ht_mutex);
+            printf("Nella tabella hash ci sono %d stringhe distinte.\n", tot);
             Distruggi_lista(head);
             hdestroy();
             tot = 0;
@@ -256,8 +257,8 @@ void *Gestore(void *arg)
             hdestroy();
             hcreate(Num_elem);
             tot = 0;
-            pthread_mutex_unlock(a->ht_mutex);
             printf("Tabella hash resettata - %d\n", tot);
+            pthread_mutex_unlock(a->ht_mutex);
         }
     }
     pthread_exit(NULL);

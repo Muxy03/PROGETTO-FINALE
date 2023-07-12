@@ -23,7 +23,7 @@ int main(int argc, char const *argv[])
 
     while (getline(&line, &len, f) != -1)
     {
-        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length)
+        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length && isspace(line[0]) == 0)
         {
             if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
             {
