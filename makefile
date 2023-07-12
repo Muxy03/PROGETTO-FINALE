@@ -32,7 +32,7 @@ client1.o: client1.c progetto.h
 progetto.o: progetto.c progetto.h
 
 pulizia:
-	rm -f *.o
+	rm -f *.o && chmod +x server.py
  
 # esempio di target che non corrisponde a una compilazione
 # ma esegue la cancellazione dei file oggetto e degli eseguibili
