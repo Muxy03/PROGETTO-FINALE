@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import socket, concurrent.futures, argparse, os, subprocess, logging, signal
+import socket, concurrent.futures, argparse, os, subprocess, logging, signal, struct,re
 
 HOST = "127.0.0.1"
 PORT = 57943 #637943
@@ -41,19 +41,27 @@ def gestisci_connessione(conn):
     elif tipo == "1":
         
         totales = 0
-        parola = conn.recv(2048)
-        lunghezza=len(parola.decode().strip('\x00').rstrip('\n'))
         
         with open("caposc", "wb") as fifo:
-            while lunghezza != 0:
-                st="0"*(4-len(str(lunghezza))) + str(lunghezza)
-                fifo.write(st.encode())
-                fifo.write(parola.decode().strip('\x00').rstrip('\n').encode())
+            int_data = conn.recv(4).replace(b'\n',b'\x00')
+            lunghezza_b = bytes(sorted(int_data,key=lambda b:b==0))[::-1]
+            lunghezza_b = b'\x00'*(4-len(lunghezza_b)) + lunghezza_b
+            lunghezza = struct.unpack("!i",lunghezza_b)[0]
+            parola = conn.recv(lunghezza).replace(b'\n',b'')
+            
+            while parola.decode() != "":
+                print(parola)
+                print(f"scrivo: {lunghezza} - ",parola.replace(b'\x00',b''))
+                fifo.write(struct.pack("!i",len(parola.replace(b'\x00',b'').decode())))
+                fifo.write(parola.replace(b'\x00',b''))
                 totales+=1
-                totaleb += len(parola)
-                parola = conn.recv(2048)
-                lunghezza=len(parola.decode().strip('\x00').rstrip('\n'))
-                
+                totaleb += len(parola.replace(b'\x00',b''))
+                int_data = conn.recv(4).replace(b'\n',b'\x00')
+                lunghezza_b = bytes(sorted(int_data,key=lambda b:b==0))[::-1]
+                lunghezza_b = b'\x00'*(4-len(lunghezza_b)) + lunghezza_b
+                lunghezza = struct.unpack("!i",lunghezza_b)[0]
+                parola = conn.recv(lunghezza).replace(b'\n',b'')
+                    
         conn.sendall(totales.to_bytes(4,"big"))
         
     print("chiudo connessione")

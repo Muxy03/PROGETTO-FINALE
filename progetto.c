@@ -126,19 +126,19 @@ void *CapoScrittore(void *arg)
     char *tmp;
     while (1)
     {
-        read(fd, length, sizeof(length));
-
-        int l = atoi(length);
-
-        if (strcmp(length, "0000") == 0)
+        int length;
+        read(fd, &length, sizeof(length));
+        length = ntohl(length);
+        if (length == 0)
         {
             break;
         }
+        printf("len:%d\n", length);
+        char tmp[length + 1];
 
-        tmp = (char *)malloc(l + 1);
-        read(fd, tmp, l);
-
-        tmp[l] = '\0';
+        read(fd, tmp, length);
+        tmp[length] = '\0';
+        printf("tmp: %s\n", tmp);
 
         char *token;
         char *save;
@@ -156,10 +156,10 @@ void *CapoScrittore(void *arg)
             pthread_cond_signal(a->bf->full);
             pthread_mutex_unlock(a->bf->mutex);
 
+            printf("token:%s\n",token);
+
             token = strtok_r(NULL, ".,:; \n\r\t", &save);
         }
-        free(tmp);
-        sleep(1);
     }
     close(fd);
     pthread_exit(NULL);
@@ -210,7 +210,6 @@ void *CapoLettore(void *arg)
             token = strtok_r(NULL, ".,:; \n\r\t", &save);
         }
         free(tmp);
-        sleep(1);
     }
     close(fd);
     pthread_exit(NULL);

@@ -7,6 +7,21 @@ typedef struct
     char *nf;
 } Targ;
 
+void test(char *s)
+{
+    int l = strlen(s);
+    printf("len prima di test:%d\n", l);
+    int i, j = 0;
+    for (i = 0; i < l; i++)
+    {
+        if (s[i] != '\n')
+        {
+            s[j++] = s[i];
+        }
+    }
+    s[j] = '\0';
+}
+
 void *Tfunc(void *args)
 {
     Targ *a = (Targ *)args;
@@ -19,7 +34,7 @@ void *Tfunc(void *args)
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
     char *line = NULL;
-    size_t len = 0,tmp;
+    size_t len = 0, tmp = 0;
     int nseq;
     char *stop = "";
 
@@ -37,14 +52,22 @@ void *Tfunc(void *args)
 
     while (getline(&line, &len, f) != -1)
     {
-        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length && isspace(line[0]) == 0)
+        int length = strlen(line) + 1;
+        line[length] = '\0';
+
+        if (send(fd, &length, sizeof(length), 0) == -1)
         {
-            printf("Linea: %s", line);
-            tmp = write(fd, line, strlen(line));
-            sleep(1);
+            termina("Errore nell'invio della lunghezza al server");
+        }
+        printf("Linea: %s\n",line);
+        if (send(fd, line, length, 0) == -1)
+        {
+            termina("Errore nell'invio della stringa al server");
         }
     }
     sleep(1);
+    int prova = 0;
+    tmp = write(fd, &prova, sizeof(prova));
     tmp = write(fd, stop, 1);
     fclose(f);
     tmp = read(fd, &nseq, sizeof(nseq));
