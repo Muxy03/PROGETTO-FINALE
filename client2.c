@@ -7,21 +7,6 @@ typedef struct
     char *nf;
 } Targ;
 
-void test(char *s)
-{
-    int l = strlen(s);
-    printf("len prima di test:%d\n", l);
-    int i, j = 0;
-    for (i = 0; i < l; i++)
-    {
-        if (s[i] != '\n')
-        {
-            s[j++] = s[i];
-        }
-    }
-    s[j] = '\0';
-}
-
 void *Tfunc(void *args)
 {
     Targ *a = (Targ *)args;
@@ -35,8 +20,6 @@ void *Tfunc(void *args)
 
     char *line = NULL;
     size_t len = 0, tmp = 0;
-    int nseq;
-    char *stop = "";
 
     if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -48,30 +31,48 @@ void *Tfunc(void *args)
         termina("Errore apertura connessione");
     }
 
-    tmp = write(fd, tipoc, sizeof(tipoc));
+    tmp = write(fd, tipoc, 1);
 
     while (getline(&line, &len, f) != -1)
     {
-        int length = strlen(line) + 1;
-        line[length] = '\0';
+        if (strlen(line) > 0 && strlen(line) <= Max_sequence_length && isspace(line[0]) == 0)
+        {
+            int line_len = strlen(line);
 
-        if (send(fd, &length, sizeof(length), 0) == -1)
-        {
-            termina("Errore nell'invio della lunghezza al server");
-        }
-        printf("Linea: %s\n",line);
-        if (send(fd, line, length, 0) == -1)
-        {
-            termina("Errore nell'invio della stringa al server");
+            if ((tmp = send(fd, &line_len, sizeof(int), 0)) == -1)
+            {
+                termina("Errore nell'invio della lunghezza della linea");
+            }
+            if ((tmp = send(fd, line, line_len, 0)) == -1)
+            {
+                termina("Errore nell'invio della linea");
+            }
         }
     }
-    sleep(1);
-    int prova = 0;
-    tmp = write(fd, &prova, sizeof(prova));
-    tmp = write(fd, stop, 1);
     fclose(f);
-    tmp = read(fd, &nseq, sizeof(nseq));
-    printf("Numero sequenze: %d\n", ntohl(nseq));
+    int empty_line_len = 0;
+    char *empty = "";
+    
+    if ((tmp = send(fd, &empty_line_len, sizeof(int), 0)) == -1)
+    {
+        termina("Errore nell'invio lunghezza della stringa vuota");
+    }
+
+    if ((tmp = send(fd, empty, strlen(empty), 0)) == -1)
+    {
+        termina("Errore nell'invio della stringa vuota");
+    }
+
+    int num_strings;
+    if ((tmp = recv(fd, &num_strings, sizeof(int), 0)) == -1)
+    {
+        termina("Errore nella ricezione del numero di stringhe");
+    }
+    else
+    {
+        printf("Numero di stringhe ricevute dal server: %d\n", num_strings);
+    }
+
     close(fd);
     pthread_exit(NULL);
 }

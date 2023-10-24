@@ -1,9 +1,18 @@
 #! /usr/bin/env python3
 
-import socket, concurrent.futures, argparse, os, subprocess, logging, signal, struct,re
+import socket, concurrent.futures, argparse, os, subprocess, logging, signal, struct
 
 HOST = "127.0.0.1"
 PORT = 57943 #637943
+
+def receive_data(conn):
+    data_len_bytes = conn.recv(4)
+    data_len = sorted(data_len_bytes,key=lambda b:b==0)[0]
+    data = conn.recv(data_len)
+    if data.decode("utf-8") == "":
+        return None
+    else:
+        return (data_len,data)
 
 def main(max_threads):    
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -30,39 +39,30 @@ def gestisci_connessione(conn):
     totaleb = 0
 
     if tipo == "0":
-        parola = conn.recv(2048).decode().strip("\x00").rstrip('\n')
-        with open("capolet", "wb") as fifo:
-            lunghezza=len(parola)
-            st="0"*(4-len(str(lunghezza))) + str(lunghezza)
-            fifo.write(st.encode())
-            fifo.write(parola.encode())
-            totaleb += len(parola.encode())
+        parola = receive_data(conn)
+        if parola is not None:
+            with open("capolet", "w") as fifo:
+                st="0"*(4 - len(str(parola[0]))) + str(parola[0])
+                fifo.write(st)
+                fifo.write(parola[1].decode('utf-8'))
+                totaleb += len(parola[1])
 
     elif tipo == "1":
         
         totales = 0
-        
-        with open("caposc", "wb") as fifo:
-            int_data = conn.recv(4).replace(b'\n',b'\x00')
-            lunghezza_b = bytes(sorted(int_data,key=lambda b:b==0))[::-1]
-            lunghezza_b = b'\x00'*(4-len(lunghezza_b)) + lunghezza_b
-            lunghezza = struct.unpack("!i",lunghezza_b)[0]
-            parola = conn.recv(lunghezza).replace(b'\n',b'')
-            
-            while parola.decode() != "":
-                print(parola)
-                print(f"scrivo: {lunghezza} - ",parola.replace(b'\x00',b''))
-                fifo.write(struct.pack("!i",len(parola.replace(b'\x00',b'').decode())))
-                fifo.write(parola.replace(b'\x00',b''))
-                totales+=1
-                totaleb += len(parola.replace(b'\x00',b''))
-                int_data = conn.recv(4).replace(b'\n',b'\x00')
-                lunghezza_b = bytes(sorted(int_data,key=lambda b:b==0))[::-1]
-                lunghezza_b = b'\x00'*(4-len(lunghezza_b)) + lunghezza_b
-                lunghezza = struct.unpack("!i",lunghezza_b)[0]
-                parola = conn.recv(lunghezza).replace(b'\n',b'')
-                    
-        conn.sendall(totales.to_bytes(4,"big"))
+        with open("caposc", "w") as fifo:
+            while True:
+                parola = receive_data(conn)
+                if parola is None:
+                    break
+                else:
+                    st="0"*(4 - len(str(parola[0]))) + str(parola[0])
+                    fifo.write(st)
+                    fifo.write(parola[1].decode('utf-8'))
+                    totales+=1
+                    totaleb += len(parola[1])
+
+        conn.send(struct.pack('i', totales))
         
     print("chiudo connessione")
 

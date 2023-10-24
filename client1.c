@@ -16,8 +16,7 @@ int main(int argc, char const *argv[])
     serv_addr.sin_addr.s_addr = inet_addr(HOST);
 
     char *line = NULL;
-    size_t len = 0;
-    ssize_t size = 0;
+    size_t len = 0, size = 0;
 
     FILE *f = fopen(argv[1], "r");
 
@@ -35,9 +34,19 @@ int main(int argc, char const *argv[])
                 termina("Errore apertura connessione");
             }
 
-            size = write(fd, tipoc, sizeof(tipoc));
+            size = write(fd, tipoc, 1);
 
-            size = send(fd, line, strlen(line), 0);
+            int line_len = strlen(line);
+
+            if ((size = send(fd, &line_len, sizeof(int), 0)) == -1)
+            {
+                termina("Errore nell'invio della lunghezza della linea");
+            }
+            
+            if ((size = send(fd, line, line_len, 0)) == -1)
+            {
+                termina("Errore nell'invio della linea");
+            }
 
             close(fd);
         }

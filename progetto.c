@@ -1,5 +1,9 @@
 #include "progetto.h"
 
+// VARIABILI GLOBALI (MINIMO INDISPENSABILE)
+static int tot = 0;
+static Node *head = NULL;
+
 // FUNZIONI
 void termina(const char *messaggio)
 {
@@ -14,10 +18,9 @@ void termina(const char *messaggio)
     exit(1);
 }
 
+// FUNZIONE CHE AGGIUNGE UN ELEMENTO ALLA LISTA AGGIORNANDO IL PUNTATORE ALLA TESTA
 void Enqueue(ENTRY *e)
 {
-    // FUNZIONE CHE AGGIUNGE UN ELEMENTO ALLA LISTA AGGIORNANDO IL PUNTATORE ALLA TESTA
-
     if (head == NULL)
     {
         head = malloc(sizeof(Node));
@@ -69,6 +72,7 @@ void aggiungi(char *s)
 {
     ENTRY *e = crea_entry(s, 1);
     ENTRY *r = hsearch(*e, FIND);
+
     if (r == NULL)
     {
         r = hsearch(*e, ENTER);
@@ -103,13 +107,14 @@ int conta(char *s)
 
 void Distruggi_lista(Node *head)
 {
-    Node *cur = head;
-    while (cur != NULL)
+    Node *current = head;
+    while (current != NULL)
     {
-        Node *tmp = cur;
-        cur = (Node *)tmp->next;
-        distruggi_entry(tmp->e);
-        free(tmp);
+        Node *temp = current;
+        current = (Node *)current->next;
+
+        distruggi_entry(temp->e);
+        free(temp);
     }
     printf("Lista distrutta\n");
 }
@@ -118,45 +123,57 @@ void *CapoScrittore(void *arg)
 {
     CArg *a = (CArg *)arg;
     int fd = open("caposc", O_RDWR);
+    
     if (fd == -1)
     {
         termina("Errore apertura FIFO");
     }
-    char length[4];
-    char *tmp;
+
+    char line_length_str[5];
+    char line[2049];
+    int line_length = 0;
+
     while (1)
     {
-        int length;
-        read(fd, &length, sizeof(length));
-        length = ntohl(length);
-        if (length == 0)
+        if (read(fd, line_length_str, 4) != 4)
+        {
+            termina("errore lettura della lunghezza");
+        }
+
+        line_length_str[4] = '\0';
+
+        line_length = atoi(line_length_str);
+
+        if (line_length == 2049)
         {
             break;
         }
-        printf("len:%d\n", length);
-        char tmp[length + 1];
 
-        read(fd, tmp, length);
-        tmp[length] = '\0';
-        printf("tmp: %s\n", tmp);
+        if (read(fd, line, line_length) != line_length)
+        {
+            termina("errore lettura della stringa");
+        }
+
+        line[line_length] = '\0';
 
         char *token;
         char *save;
-        token = strtok_r(tmp, ".,:; \n\r\t", &save);
+        token = strtok_r(line, ".,:; \n\r\t", &save);
         while (token != NULL)
         {
             pthread_mutex_lock(a->bf->mutex);
+
             while (*(a->bf->counter) == PC_buffer_len)
             {
                 pthread_cond_wait(a->bf->empty, a->bf->mutex);
             }
+
             strcpy(a->bf->buffer[*(a->bf->in) % PC_buffer_len], token);
             *(a->bf->in) += 1;
             *(a->bf->counter) += 1;
+
             pthread_cond_signal(a->bf->full);
             pthread_mutex_unlock(a->bf->mutex);
-
-            printf("token:%s\n",token);
 
             token = strtok_r(NULL, ".,:; \n\r\t", &save);
         }
@@ -169,47 +186,60 @@ void *CapoLettore(void *arg)
 {
     CArg *a = (CArg *)arg;
     int fd = open("capolet", O_RDWR);
+    
     if (fd == -1)
     {
         termina("Errore apertura FIFO");
     }
-    char length[4];
-    char *tmp;
+    
+    char line_length_str[5];
+    char line[2049];
+    int line_length = 0;
+    
     while (1)
     {
-        read(fd, length, sizeof(length));
+        if (read(fd, line_length_str, 4) != 4)
+        {
+            termina("errore lettura della lunghezza");
+        }
 
-        int l = atoi(length);
+        line_length_str[4] = '\0';
 
-        if (strcmp(length, "0000") == 0)
+        line_length = atoi(line_length_str);
+
+        if (line_length == 2049)
         {
             break;
         }
 
-        tmp = (char *)malloc(l + 1);
-        read(fd, tmp, l);
+        if (read(fd, line, line_length) != line_length)
+        {
+            termina("errore lettura della stringa");
+        }
 
-        tmp[l] = '\0';
+        line[line_length] = '\0';
 
         char *token;
         char *save;
-        token = strtok_r(tmp, ".,:; \n\r\t", &save);
+        token = strtok_r(line, ".,:; \n\r\t", &save);
         while (token != NULL)
         {
             pthread_mutex_lock(a->bf->mutex);
+
             while (*(a->bf->counter) == PC_buffer_len)
             {
                 pthread_cond_wait(a->bf->empty, a->bf->mutex);
             }
+
             strcpy(a->bf->buffer[*(a->bf->in) % PC_buffer_len], token);
             *(a->bf->in) += 1;
             *(a->bf->counter) += 1;
+
             pthread_cond_signal(a->bf->full);
             pthread_mutex_unlock(a->bf->mutex);
 
             token = strtok_r(NULL, ".,:; \n\r\t", &save);
         }
-        free(tmp);
     }
     close(fd);
     pthread_exit(NULL);
@@ -219,46 +249,76 @@ void *Gestore(void *arg)
 {
     GArg *a = (GArg *)arg;
     int sig;
+    ssize_t tmp = 0;
     while (1)
     {
         sigwait(a->set, &sig);
         if (sig == SIGINT)
         {
             pthread_mutex_lock(a->ht_mutex);
+
             fprintf(stderr, "Nella tabella hash ci sono %d stringhe distinte.\n", tot);
+
             pthread_mutex_unlock(a->ht_mutex);
         }
         else if (sig == SIGTERM)
         {
             int fds = open("caposc", O_RDWR);
-            write(fds, "0000", 4 * sizeof(char));
+            if ((tmp = write(fds, "2049", 4)) == -1)
+            {
+                termina("Errore scrittura stringa di terminazione capo scrittore");
+            }
+
             close(fds);
+
             int fdl = open("capolet", O_RDWR);
-            write(fdl, "0000", 4 * sizeof(char));
+            if ((tmp = write(fdl, "2049", 4)) == -1)
+            {
+                termina("Errore scrittura stringa di terminazione capo lettore");
+            }
+
             close(fdl);
+
             pthread_join(*(a->capoS), NULL);
             pthread_join(*(a->capoL), NULL);
+
             *(a->fine) = 1;
 
             pthread_cond_broadcast(a->S_full);
             pthread_cond_broadcast(a->L_full);
 
+            for (int i = 0; i < a->w; i++)
+            {
+                pthread_join(a->Scrittori[i], NULL);
+            }
+
+            for (int i = 0; i < a->r; i++)
+            {
+                pthread_join(a->Lettori[i], NULL);
+            }
+
             pthread_mutex_lock(a->ht_mutex);
+
             printf("Nella tabella hash ci sono %d stringhe distinte.\n", tot);
-            Distruggi_lista(head);
-            hdestroy();
-            tot = 0;
+            if (tot > 0)
+            {
+                Distruggi_lista(head);
+                hdestroy();
+                tot = 0;
+            }
             pthread_mutex_unlock(a->ht_mutex);
             break;
         }
         else if (sig == SIGUSR1)
         {
             pthread_mutex_lock(a->ht_mutex);
+
             Distruggi_lista(head);
             hdestroy();
             hcreate(Num_elem);
             tot = 0;
             printf("Tabella hash resettata - %d\n", tot);
+
             pthread_mutex_unlock(a->ht_mutex);
         }
     }
@@ -268,7 +328,7 @@ void *Gestore(void *arg)
 void *Scrittore(void *arg)
 {
     SLArg *a = (SLArg *)arg;
-    char *token;
+    char *token = NULL;
     while (1)
     {
         pthread_mutex_lock(a->bf->mutex);
@@ -286,14 +346,15 @@ void *Scrittore(void *arg)
         token = a->bf->buffer[*(a->bf->out) % PC_buffer_len];
         *(a->bf->out) += 1;
         *(a->bf->counter) -= 1;
-        pthread_mutex_unlock(a->bf->mutex);
-        pthread_cond_signal(a->bf->empty);
 
         pthread_mutex_lock(a->hmutex);
 
         aggiungi(token);
 
         pthread_mutex_unlock(a->hmutex);
+
+        pthread_cond_signal(a->bf->empty);
+        pthread_mutex_unlock(a->bf->mutex);
     }
     pthread_exit(NULL);
 }
@@ -320,26 +381,28 @@ void *Lettore(void *arg)
         token = a->bf->buffer[*(a->bf->out) % PC_buffer_len];
         *(a->bf->out) += 1;
         *(a->bf->counter) -= 1;
-        pthread_mutex_unlock(a->bf->mutex);
-        pthread_cond_signal(a->bf->empty);
+
         pthread_mutex_lock(a->hmutex);
 
         tmp = conta(token);
 
         pthread_mutex_unlock(a->hmutex);
+
         pthread_mutex_lock(a->fmutex);
 
         FILE *f = fopen("lettori.log", "a");
         if (f == NULL)
         {
-            termina("Errore fopen");
+            termina("Errore apertura lettori.log");
         }
 
         fprintf(f, "%s %d\n", token, tmp);
-        fflush(f);
         fclose(f);
 
         pthread_mutex_unlock(a->fmutex);
+
+        pthread_cond_signal(a->bf->empty);
+        pthread_mutex_unlock(a->bf->mutex);
     }
     pthread_exit(NULL);
 }

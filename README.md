@@ -10,7 +10,7 @@ Scelte implementative:
 
 4. Connessione di tipo B -> il client manda la stringa "1" -> per evitare di mandare righe di lunghezza maggiore di 0 ma non composte da caratteri effettuo il controllo isspace(line\[0\]) (dando per scontato che una riga valida non inizi con un carattere escape)
 
-5. Terminazione thread (Scrittori, Lettori e rispettivi Capi) in archivio -> scrittura nelle fifo di "0000" e aggiornamento variabile fine (da 0 a 1)
+5. Terminazione thread (Scrittori, Lettori e rispettivi Capi) in archivio -> scrittura nelle fifo di "2049" e aggiornamento variabile fine (da 0 a 1)
 
 6. Per archivio ho creato 5 strutture dati:
 	1. Buffer -> struttura per la gestione dei buffer

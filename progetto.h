@@ -68,12 +68,7 @@ typedef struct
     struct Node *next;
 } Node;
 
-// VARIABILI GLOBALI (minimo indispensabile)
-static int tot = 0;
-static Node *head = NULL;
-
 // FUNZIONI
-
 void termina(const char *messaggio);
 
 void Enqueue(ENTRY *e);

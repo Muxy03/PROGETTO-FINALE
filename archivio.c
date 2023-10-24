@@ -26,9 +26,9 @@ int main(int argc, char *argv[])
     pthread_mutex_t hmutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_t fmutex = PTHREAD_MUTEX_INITIALIZER;
 
+    pthread_t capoL, capoS, GS;
     pthread_t Scrittori[w];
     pthread_t Lettori[r];
-    pthread_t capoL, capoS, GS;
 
     // BUFFER CAPOLETTORE E LETTORI
     char bufferL[PC_buffer_len][Max_sequence_length];
@@ -110,17 +110,7 @@ int main(int argc, char *argv[])
     }
 
     pthread_join(GS, NULL);
-
-    for (int i = 0; i < w; i++)
-    {
-        pthread_join(Scrittori[i], NULL);
-    }
-
-    for (int i = 0; i < r; i++)
-    {
-        pthread_join(Lettori[i], NULL);
-    }
-
+    
     pthread_mutex_destroy(&mutexS);
     pthread_cond_destroy(&fullS);
     pthread_cond_destroy(&emptyS);
