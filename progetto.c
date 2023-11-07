@@ -36,7 +36,7 @@ void Enqueue(ENTRY *e)
         Node *tmp = malloc(sizeof(Node));
         if (tmp == NULL)
         {
-            termina("errore malloc tmp");
+            termina("errore malloc nuovo Nodo");
         }
         tmp->e = e;
         tmp->next = (struct Node *)head;
@@ -300,12 +300,14 @@ void *Gestore(void *arg)
             pthread_mutex_lock(a->ht_mutex);
 
             printf("Nella tabella hash ci sono %d stringhe distinte.\n", tot);
+            
             if (tot > 0)
             {
                 Distruggi_lista(head);
                 hdestroy();
                 tot = 0;
             }
+
             pthread_mutex_unlock(a->ht_mutex);
             break;
         }

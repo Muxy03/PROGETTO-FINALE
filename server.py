@@ -31,6 +31,8 @@ def main(max_threads):
                 p.wait()
                 os.unlink("capolet")
                 os.unlink("caposc")
+                open("lettori.log","w").close()
+                open("server.log","w").close()
                 print("Server chiuso")
 
 def gestisci_connessione(conn):

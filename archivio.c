@@ -4,7 +4,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        termina("Uso: ./archivio <w> <r>\n");
+        termina("Uso: ./archivio <w> <r>");
     }
 
     int ht = hcreate(Num_elem);
