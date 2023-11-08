@@ -123,7 +123,7 @@ void *CapoScrittore(void *arg)
 {
     CArg *a = (CArg *)arg;
     int fd = open("caposc", O_RDWR);
-    
+
     if (fd == -1)
     {
         termina("Errore apertura FIFO");
@@ -186,16 +186,16 @@ void *CapoLettore(void *arg)
 {
     CArg *a = (CArg *)arg;
     int fd = open("capolet", O_RDWR);
-    
+
     if (fd == -1)
     {
         termina("Errore apertura FIFO");
     }
-    
+
     char line_length_str[5];
     char line[2049];
     int line_length = 0;
-    
+
     while (1)
     {
         if (read(fd, line_length_str, 4) != 4)
@@ -297,10 +297,20 @@ void *Gestore(void *arg)
                 pthread_join(a->Lettori[i], NULL);
             }
 
+            FILE *f = fopen("lettori.log", "a");
+
+            if (f == NULL)
+            {
+                termina("Errore apertura lettori.log");
+            }
+
+            fprintf(f, "!! -> SESSIONE TERMINATA <- !!\n");
+            fclose(f);
+
             pthread_mutex_lock(a->ht_mutex);
 
             printf("Nella tabella hash ci sono %d stringhe distinte.\n", tot);
-            
+
             if (tot > 0)
             {
                 Distruggi_lista(head);

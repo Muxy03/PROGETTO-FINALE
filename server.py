@@ -31,8 +31,7 @@ def main(max_threads):
                 p.wait()
                 os.unlink("capolet")
                 os.unlink("caposc")
-                open("lettori.log","w").close()
-                open("server.log","w").close()
+                logging.debug("SESSIONE TERMINATA")
                 print("Server chiuso")
 
 def gestisci_connessione(conn):
@@ -72,7 +71,7 @@ def gestisci_connessione(conn):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Server", formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("t", default=1, type=int, help="Threads")
+    parser.add_argument("t", type=int, default=1, help="Threads")
     parser.add_argument("-w", type=int, default=3, help="Writers")
     parser.add_argument("-r", type=int, default=3, help="Readers")
     parser.add_argument("-v", action="store_true", help="Valgrind")
@@ -86,8 +85,9 @@ if __name__ == "__main__":
     if not os.path.exists("capolet"):
         os.mkfifo("capolet")
 
-    with open("lettori.log","w") as f:
-        pass
+    if not os.path.exists("lettori.log"):
+        with open("lettori.log","w") as f:
+            pass
 
     if args.v :
         p = subprocess.Popen(["valgrind","--leak-check=full","--show-leak-kinds=all","--log-file=valgrind-%p.log","./archivio",f"{args.w}",f"{args.r}"])
