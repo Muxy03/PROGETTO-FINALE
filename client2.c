@@ -52,7 +52,7 @@ void *Tfunc(void *args)
     fclose(f);
     int empty_line_len = 0;
     char *empty = "";
-    
+
     if ((tmp = send(fd, &empty_line_len, sizeof(int), 0)) == -1)
     {
         termina("Errore nell'invio lunghezza della stringa vuota");

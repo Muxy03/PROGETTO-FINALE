@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     }
 
     pthread_join(GS, NULL);
-    
+
     pthread_mutex_destroy(&mutexS);
     pthread_cond_destroy(&fullS);
     pthread_cond_destroy(&emptyS);

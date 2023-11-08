@@ -42,7 +42,7 @@ int main(int argc, char const *argv[])
             {
                 termina("Errore nell'invio della lunghezza della linea");
             }
-            
+
             if ((size = send(fd, line, line_len, 0)) == -1)
             {
                 termina("Errore nell'invio della linea");
