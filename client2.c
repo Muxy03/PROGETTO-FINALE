@@ -70,7 +70,7 @@ void *Tfunc(void *args)
     }
     else
     {
-        printf("Numero di stringhe ricevute dal server: %d\n", num_strings);
+        printf("Numero di stringhe ricevute dal server: %d\n", ntohl(num_strings));
     }
 
     close(fd);

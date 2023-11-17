@@ -63,7 +63,7 @@ def gestisci_connessione(conn):
                     totales+=1
                     totaleb += len(parola[1])
 
-        conn.send(struct.pack('i', totales))
+        conn.send(struct.pack('!i', totales))
         
     print("chiudo connessione")
 
