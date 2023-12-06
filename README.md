@@ -24,5 +24,6 @@ Scelte implementative:
 		- Nodo1->NULL  -->  Nodo2->Nodo1->NULL
 	2. funzione Enqueue -> funzione che aggiorna la lista (esempio del funzionamento nel punto 1)
 	3. funzione Distruggi_lista -> funzione che visita ogni nodo della lista e ad ogni iterazione libera la memoria del nodo visitato
+	4. utilizzo 2 variabili globali (tot, head) che si riferiscono rispettivamente alla dimensione della linked list e al puntatore alla testa di quest'ultima.
 
 8. All'interno del Gestore dei segnali utilizzo le funzioni printf e fprintf (funzioni non async-signal-safe) perché tutte le operazioni, sia di lettura che di scrittura, della variabile globale tot sono sincronizzate mediante il mutex ht_mutex quindi non dovrebbero generare comportamenti anomali. Il mutex ht_mutex è inoltre usato per sincronizzare le operazioni che modificano la Linked List, sia dentro che fuori il Gestore dei segnali.
