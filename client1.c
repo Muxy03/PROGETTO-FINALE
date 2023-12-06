@@ -56,6 +56,5 @@ int main(int argc, char const *argv[])
     free(line);
 
     printf("connessione chiusa\n");
-    fflush(stdout);
     return 0;
 }

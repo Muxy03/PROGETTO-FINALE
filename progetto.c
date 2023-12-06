@@ -149,7 +149,7 @@ void *CapoScrittore(void *arg)
             break;
         }
 
-        if (read(fd, line, line_length) != line_length)
+        if (read(fd, line, line_length)  == -1)
         {
             termina("errore lettura della stringa");
         }
