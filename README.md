@@ -6,7 +6,7 @@ Scelte implementative:
 
 2. Nel server scrivo la lunghezza della riga ricevuta tramite connessione socket nella fifo d'interesse, prima di scrivere nella medesima fifo la riga stessa. Ovviamente i vari capi convertiranno questa lunghezza espressa come stringa in un intero per le operazioni successive (mediante funzione atoi);
 
-3. Connessioni dei client -> per evitare di mandare righe di lunghezza maggiore di 0 ma non composte da caratteri effettuo il controllo isspace(line\[0\]), assumendo che le linee valide inizino con un carattere ASCII:
+3. Connessioni dei client -> per evitare di mandare righe di lunghezza maggiore di 0 ma non composte da caratteri effettuo il controllo isspace(line\[0\]), assumendo che le linee valide non inizino con: spazi, '\f', '\n', '\r', '\t', '\v'.
 	1. Connessione di tipo A  -> il client manda la stringa "0"
 	2. Connessione di tipo B -> il client manda la stringa "1"
 

@@ -33,7 +33,7 @@ void *Tfunc(void *args)
 
     tmp = write(fd, tipoc, 1);
 
-    while (getline(&line, &len, f) != -1)
+    while ((tmp = getline(&line, &len, f)) != -1)
     {
         if (strlen(line) > 0 && strlen(line) <= Max_sequence_length && isspace(line[0]) == 0)
         {
@@ -49,6 +49,7 @@ void *Tfunc(void *args)
             }
         }
     }
+
     fclose(f);
     int empty_line_len = 0;
     char *empty = "";
@@ -56,21 +57,25 @@ void *Tfunc(void *args)
     if ((tmp = send(fd, &empty_line_len, sizeof(int), 0)) == -1)
     {
         termina("Errore nell'invio lunghezza della stringa vuota");
+        free(line);
     }
 
     if ((tmp = send(fd, empty, strlen(empty), 0)) == -1)
     {
         termina("Errore nell'invio della stringa vuota");
+        free(line);
     }
 
     int num_strings;
     if ((tmp = recv(fd, &num_strings, sizeof(int), 0)) == -1)
     {
         termina("Errore nella ricezione del numero di stringhe");
+        free(line);
     }
     else
     {
         printf("Numero di stringhe ricevute dal server: %d\n", ntohl(num_strings));
+        free(line);
     }
 
     close(fd);
